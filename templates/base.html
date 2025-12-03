@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title if title else "Шепіт Мандрагори" }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" href="/static/favicon.svg?v=2" type="image/svg+xml">
+</head>
+<body>
+<div class="page-wrap">
+    <header class="site-header">
+        <div class="header-inner">
+            <div class="header-copy">
+                <h1 class="brand-title">Шепіт Мандрагори</h1>
+                <p class="brand-subtitle">Тематичне зимове кафе у Харкові на Французькому бульварі. Вишуканий сервіс, авторські меню та вечірня атмосфера з елементами магії.</p>
+            </div>
+        </div>
+
+        {% include '_navigation.html' %}
+    </header>
+
+    <main class="content">
+        <div class="content-inner">
+            {% include '_flash_messages.html' %}
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-columns">
+            <div>
+                <h3>Контакти</h3>
+                <p>Email: concierge@mandrakewhisper.kh.ua</p>
+                <p>Лінія для гостей: +38 (000) 000-00-00</p>
+            </div>
+            <div>
+                <h3>Графік</h3>
+                <p>Будні: 16:00 — 23:00</p>
+                <p>Вихідні: 14:00 — 00:00</p>
+            </div>
+            <div>
+                <h3>Розташування</h3>
+                <p>Французький бульвар, 29</p>
+                <p>Харків, Україна</p>
+            </div>
+        </div>
+        <p class="footer-note">© {{ current_year if current_year else 2025 }} Шепіт Мандрагори. Вибрані зимові події та гастрономічні вечері.</p>
+    </footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+    <h2>Оформлення замовлення</h2>
+    {% if basket %}
+        <ul>
+            {% for name, amount in basket.items() %}
+                <li><strong>{{ name }}</strong> — кількість: {{ amount }}</li>
+            {% endfor %}
+        </ul>
+        <form method="post" class="form-grid" style="margin-top: 1.6rem;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div>
+                <label for="customer_name">Повне ім'я</label>
+                <input id="customer_name" type="text" name="customer_name" value="{{ form_data.customer_name }}" required>
+            </div>
+            <div>
+                <label for="customer_phone">Телефон</label>
+                <input id="customer_phone" type="tel" name="customer_phone" value="{{ form_data.customer_phone }}" required>
+            </div>
+            <div>
+                <label for="customer_address">Адреса доставки</label>
+                <input id="customer_address" type="text" name="customer_address" value="{{ form_data.customer_address }}" required>
+            </div>
+            <div>
+                <label for="delivery_notes">Побажання до доставки</label>
+                <textarea id="delivery_notes" name="delivery_notes" rows="3">{{ form_data.delivery_notes }}</textarea>
+            </div>
+            <div>
+                <span>Метод оплати</span>
+                <label><input type="radio" name="payment_method" value="card" {% if form_data.payment_method == 'card' %}checked{% endif %}> Банківська карта</label>
+                <label><input type="radio" name="payment_method" value="cash" {% if form_data.payment_method == 'cash' %}checked{% endif %}> Готівка</label>
+            </div>
+            <div>
+                <button type="submit">Підтвердити замовлення</button>
+            </div>
+        </form>
+    {% else %}
+        <p>Ваш чарівний кошик порожній. Поверніться до <a href="/menu">меню</a>, щоб додати позиції.</p>
+    {% endif %}
+</section>
+{% endblock %}

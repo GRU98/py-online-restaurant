@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+    <h2>Реєстрація чарівника</h2>
+    <p>Створіть власний перепуст, щоб замовляти казкові страви, бронювати столики та збирати колекцію зимових легенд.</p>
+    <form action="/register" method="post" class="form-grid">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div>
+            <label for="nickname">Нікнейм</label>
+            <input id="nickname" type="text" name="nickname" required>
+        </div>
+        <div>
+            <label for="email">Email</label>
+            <input id="email" type="email" name="email" required>
+        </div>
+        <div>
+            <label for="password">Пароль (мінімум 8 символів)</label>
+            <input id="password" type="password" name="password" minlength="8" required>
+        </div>
+        <div>
+            <button type="submit">Зареєструватися</button>
+        </div>
+    </form>
+    <p>Вже маєте акаунт? <a href="/login">Увійдіть</a>.</p>
+</section>
+{% endblock %}

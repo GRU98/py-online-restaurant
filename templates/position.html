@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+    <div class="card-grid">
+        <div>
+            <h2>{{ position.name }}</h2>
+            <p class="pill-tag">{{ position.weight }} г</p>
+            <p><strong>Ціна:</strong> {{ position.price }} грн</p>
+            <p><strong>Інгредієнти:</strong> {{ position.ingredients }}</p>
+            <p><strong>Опис:</strong> {{ position.description }}</p>
+        </div>
+        <div class="dish-image-wrapper">
+            {% if position.file_name %}
+                <img class="dish-image" src="/static/menu/{{ position.file_name }}" alt="{{ position.name }}">
+            {% else %}
+                <div class="gallery-item">
+                    <h4>Візуальна магія</h4>
+                    <p>Зображення готується магами-художниками.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <form method="post" class="form-grid" style="margin-top: 1.8rem;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div>
+            <label for="num">Кількість</label>
+            <input id="num" type="number" name="num" min="1" value="1" required>
+        </div>
+        <div>
+            <button type="submit">Додати до кошика</button>
+        </div>
+    </form>
+    <p style="margin-top: 1rem;"><a href="/menu">← Повернутися до меню</a></p>
+</section>
+{% endblock %}

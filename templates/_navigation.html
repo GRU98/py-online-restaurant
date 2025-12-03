@@ -1,0 +1,23 @@
+<nav class="primary-nav">
+    <ul class="nav-list">
+        <li><a href="/">Головна</a></li>
+        <li><a href="/menu">Меню</a></li>
+        {% if logged_user %}
+            <li><a href="/create_order">Кошик</a></li>
+            <li><a href="/my_orders">Мої замовлення</a></li>
+            <li><a href="/my_reservations">Мої бронювання</a></li>
+            <li><a href="/reserved">Бронювання</a></li>
+            <li><a href="/logout">Вихід</a></li>
+        {% else %}
+            <li><a href="/login">Вхід</a></li>
+            <li><a href="/register">Реєстрація</a></li>
+        {% endif %}
+        {% if is_admin %}
+            <li><a href="/add_position">Додати позицію</a></li>
+            <li><a href="/menu_check">Перевірити меню</a></li>
+            <li><a href="/orders_check">Замовлення</a></li>
+            <li><a href="/reservations_check">Бронювання</a></li>
+            <li><a href="/all_users">Користувачі</a></li>
+        {% endif %}
+    </ul>
+</nav>

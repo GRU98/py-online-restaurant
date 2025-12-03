@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero-banner">
+    <h2>Зимове меню</h2>
+    <p>Сезонна колекція страв і напоїв кафе «Шепіт Мандрагори». Ми працюємо з локальними харківськими продуктами, поєднуємо класичні техніки й сучасну подачу, пропонуємо сети для камерних вечерь, подій і бізнес-зустрічей.</p>
+    <a class="btn" href="#menu-list">Перейти до меню</a>
+</section>
+
+<section id="menu-list">
+    <h2 class="section-title">Меню зимових частувань</h2>
+    {% if all_positions %}
+        <div class="menu-gallery">
+            {% for position in all_positions %}
+                <article class="menu-card">
+                    {% if position.file_name %}
+                        <img src="/static/menu/{{ position.file_name }}" alt="{{ position.name }}">
+                    {% endif %}
+                    <h4>{{ position.name }}</h4>
+                    <div class="menu-meta">
+                        <span>{{ position.weight }} г</span>
+                        <strong>{{ position.price }} грн</strong>
+                    </div>
+                    <p>{{ position.ingredients }}</p>
+                    <a class="btn" href="/position/{{ position.name }}">Переглянути</a>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>Меню оновлюється. Будь ласка, перевірте сторінку пізніше, щоб ознайомитися з новими позиціями.</p>
+    {% endif %}
+</section>
+{% endblock %}

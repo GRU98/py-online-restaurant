@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+    <h2>Усі користувачі</h2>
+    {% include '_admin_navigation.html' %}
+    {% if users %}
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Нікнейм</th>
+                <th>Email</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.nickname }}</td>
+                    <td>{{ user.email }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Користувачів поки що немає.</p>
+    {% endif %}
+</section>
+{% endblock %}

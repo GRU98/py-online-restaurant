@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero-banner">
+    <h2>Адміністративна консоль замовлень</h2>
+    <p>Переглядайте зимові доставлення, керуйте статусами та контролюйте магічні деталі клієнтів.</p>
+    {% include '_admin_navigation.html' %}
+</section>
+
+<section>
+    <h2 class="section-title">Замовлення гостей</h2>
+    {% if all_orders %}
+        <div class="orders-wrap">
+            <table class="orders-table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Користувач</th>
+                    <th>Створено</th>
+                    <th>Клієнт</th>
+                    <th>Телефон</th>
+                    <th>Адреса</th>
+                    <th>Оплата</th>
+                    <th>Сума</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for order in all_orders %}
+                    <tr>
+                        <td>{{ order.id }}</td>
+                        <td>{{ order.user.nickname }}</td>
+                        <td>{{ order.order_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>{{ order.customer_name }}</td>
+                        <td>{{ order.customer_phone }}</td>
+                        <td>{{ order.customer_address }}</td>
+                        <td>{{ 'Банківська карта' if order.payment_method == 'card' else 'Готівка' }}</td>
+                        <td>{{ '{:.2f}'.format(order.total_cost) }} грн</td>
+                        <td><a class="btn" href="/my_order/{{ order.id }}">Переглянути</a></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p>Замовлень поки немає.</p>
+    {% endif %}
+</section>
+{% endblock %}

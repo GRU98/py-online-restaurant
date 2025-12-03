@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+    <h2>Вхід до {{ app_name }}</h2>
+    <p>Оберіть, ким ви є сьогодні: відвідувачем, що мріє про гарячий какао, чи адміністратором Великої зали.</p>
+    <form action="/login" method="post" class="form-grid">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div>
+            <label for="nickname">Нікнейм</label>
+            <input id="nickname" type="text" name="nickname" required>
+        </div>
+        <div>
+            <label for="password">Пароль</label>
+            <input id="password" type="password" name="password" required>
+        </div>
+        <div>
+            <span>Роль</span>
+            <label><input type="radio" name="persona" value="guest" checked> Звичайний користувач</label>
+            <label><input type="radio" name="persona" value="admin"> Адміністратор</label>
+        </div>
+        <div>
+            <button type="submit">Увійти</button>
+        </div>
+    </form>
+    <p>Ще не маєте акаунта? <a href="/register">Створіть його</a>.</p>
+</section>
+{% endblock %}

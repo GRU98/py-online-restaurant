@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+    <h2>Мої замовлення</h2>
+    {% if orders %}
+        <ul>
+            {% for order in orders %}
+                <li>
+                    Замовлення №{{ order.id }} від {{ order.order_time }} —
+                    <a href="/my_order/{{ order.id }}">переглянути деталі</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Ви ще не замовляли чарівних страв. Перегляньте <a href="/menu">меню</a>, щоб розпочати.</p>
+    {% endif %}
+</section>
+{% endblock %}

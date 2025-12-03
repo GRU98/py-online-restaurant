@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+    <h2>Мої бронювання</h2>
+    {% if reservations %}
+        <div class="orders-wrap" style="margin-top: 1.2rem;">
+            <table class="orders-table">
+                <thead>
+                <tr>
+                    <th>Дата та час</th>
+                    <th>Тип столика</th>
+                    <th>Адреса</th>
+                    <th>Коментар</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for res in reservations %}
+                    <tr>
+                        <td>{{ res.time_start.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>{{ res.type_table }}</td>
+                        <td>{{ res.guest_address or "—" }}</td>
+                        <td>{{ res.guest_notes or "—" }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p>У вас ще немає активних бронювань. <a href="/reserved">Забронювати столик</a>.</p>
+    {% endif %}
+</section>
+{% endblock %}

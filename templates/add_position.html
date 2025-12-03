@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+    <h2>Додавання нової позиції</h2>
+    {% include '_admin_navigation.html' %}
+    <form method="post" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <p>
+            <label for="name">Назва</label><br>
+            <input id="name" type="text" name="name" required>
+        </p>
+        <p>
+            <label for="ingredients">Інгредієнти</label><br>
+            <textarea id="ingredients" name="ingredients" rows="4" required></textarea>
+        </p>
+        <p>
+            <label for="description">Опис</label><br>
+            <textarea id="description" name="description" rows="4" required></textarea>
+        </p>
+        <p>
+            <label for="price">Ціна (грн)</label><br>
+            <input id="price" type="number" step="0.01" name="price" required>
+        </p>
+        <p>
+            <label for="weight">Вага (г)</label><br>
+            <input id="weight" type="number" name="weight" required>
+        </p>
+        <p>
+            <label for="img">Файл зображення</label><br>
+            <input id="img" type="file" name="img" required>
+        </p>
+        <p>
+            <button type="submit">Додати позицію</button>
+        </p>
+    </form>
+</section>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+    <h2>Перевірка бронювань</h2>
+    {% include '_admin_navigation.html' %}
+    {% if all_reservations %}
+        <table class="orders-table">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Час</th>
+                <th>Тип столика</th>
+                <th>Гість</th>
+                <th>Телефон</th>
+                <th>Email</th>
+                <th>Адреса</th>
+                <th>Коментар</th>
+                <th>Користувач</th>
+                <th>Дія</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for res in all_reservations %}
+                <tr>
+                    <td>{{ res.id }}</td>
+                    <td>{{ res.time_start }}</td>
+                    <td>{{ res.type_table }}</td>
+                    <td>{{ res.guest_name }}</td>
+                    <td>{{ res.guest_phone }}</td>
+                    <td>{{ res.guest_email }}</td>
+                    <td>{{ res.guest_address or "—" }}</td>
+                    <td>{{ res.guest_notes or "—" }}</td>
+                    <td>{{ res.user.nickname }}</td>
+                    <td>
+                        <form method="post">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <input type="hidden" name="reserv_id" value="{{ res.id }}">
+                            <button type="submit">Видалити</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Активних бронювань немає.</p>
+    {% endif %}
+</section>
+{% endblock %}
