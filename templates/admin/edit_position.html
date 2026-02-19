@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+    <h2>Редагування позиції: {{ item.name }}</h2>
+    {% include '_admin_navigation.html' %}
+    <form method="post" enctype="multipart/form-data" class="form-grid" style="max-width: 600px;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div>
+            <label for="name">Назва</label>
+            <input id="name" type="text" name="name" value="{{ item.name }}" required>
+        </div>
+        <div>
+            <label for="ingredients">Інгредієнти</label>
+            <textarea id="ingredients" name="ingredients" rows="3" required>{{ item.ingredients }}</textarea>
+        </div>
+        <div>
+            <label for="description">Опис</label>
+            <textarea id="description" name="description" rows="3" required>{{ item.description }}</textarea>
+        </div>
+        <div>
+            <label for="price">Ціна (грн)</label>
+            <input id="price" type="number" step="0.01" name="price" value="{{ item.price }}" required>
+        </div>
+        <div>
+            <label for="weight">Вага (г)</label>
+            <input id="weight" type="text" name="weight" value="{{ item.weight }}" required>
+        </div>
+        <div>
+            <label for="category">Категорія</label>
+            <select id="category" name="category" required>
+                {% for cat in categories %}
+                <option value="{{ cat }}" {% if cat == item.category %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label>Поточне фото</label>
+            {% if item.file_name %}
+            <div style="margin-bottom:0.5rem;">
+                <img src="/static/menu/{{ item.file_name }}" alt="{{ item.name }}" style="max-width:200px;border-radius:10px;border:1px solid rgba(198,167,94,0.2);">
+            </div>
+            {% else %}
+            <p style="color:var(--text-muted);font-size:0.85rem;">Фото відсутнє</p>
+            {% endif %}
+            <label for="img">Нове зображення (залиште порожнім, щоб не змінювати)</label>
+            <input id="img" type="file" name="img" accept=".png,.jpg,.jpeg,.gif,.webp">
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;">
+            <button type="submit" class="btn">Зберегти зміни</button>
+            <a href="/menu_check" class="btn btn-outline">Скасувати</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

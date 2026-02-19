@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero-banner hero-bg" style="padding:3.5rem 2rem;">
+    <img class="hero-bg-img" src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1920&q=85" alt="" loading="eager">
+    <h2 class="shimmer-text">Наше меню</h2>
+    <p>Ознайомтеся з нашими стравами. Ми використовуємо лише найсвіжіші інгредієнти.</p>
+</section>
+
+<section id="menu-list">
+    <div class="menu-filters">
+        <input type="text" id="menu-search" placeholder="Пошук страв...">
+        <div class="filter-buttons">
+            <button class="filter-btn active" data-filter="all">Всі</button>
+            {% for cat in categories %}
+            <button class="filter-btn" data-filter="{{ cat }}">{{ cat }}</button>
+            {% endfor %}
+        </div>
+    </div>
+    {% if all_positions %}
+        <div class="menu-gallery">
+            {% for position in all_positions %}
+                <article class="menu-card" data-category="{{ position.category or 'Бургери' }}">
+                    <div class="menu-card__img-wrap">
+                        {% if position.file_name %}
+                            <img src="/static/menu/{{ position.file_name }}" alt="{{ position.name }}" loading="lazy">
+                        {% else %}
+                            <div class="menu-card__placeholder"><i class="fa-solid fa-utensils"></i></div>
+                        {% endif %}
+                        {% if position.discount_percent %}
+                        <span class="menu-card__badge">-{{ position.discount_percent }}%</span>
+                        {% endif %}
+                    </div>
+                    <div class="menu-card__body">
+                        <div class="menu-card__top">
+                            <h4 class="menu-card__title">{{ position.name }}</h4>
+                            {% if position.category %}
+                            <span class="menu-card__tag">{{ position.category }}</span>
+                            {% endif %}
+                            <p class="menu-card__desc">{{ position.ingredients }}</p>
+                        </div>
+                        <div class="menu-card__bottom">
+                            <div class="menu-card__price-row">
+                                <span class="menu-card__weight">{{ position.weight }} г</span>
+                                {% if position.discount_percent and position.original_price %}
+                                <div class="menu-card__prices">
+                                    <span class="menu-card__old-price">{{ position.original_price|round(0)|int }} грн</span>
+                                    <span class="menu-card__price">{{ position.price|round(0)|int }} грн</span>
+                                </div>
+                                {% else %}
+                                <span class="menu-card__price">{{ position.price|round(0)|int }} грн</span>
+                                {% endif %}
+                            </div>
+                            <div class="menu-card__actions">
+                                <a class="btn btn-sm" href="/position/{{ position.name }}">Переглянути</a>
+                                {% if logged_user %}
+                                <form method="post" action="/position/{{ position.name }}" class="menu-card__cart-form">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <input type="hidden" name="num" value="1">
+                                    <button type="submit" class="btn-cart" title="Додати до кошика">
+                                        <i class="fa-solid fa-cart-plus"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>Меню оновлюється. Перевірте сторінку пізніше.</p>
+    {% endif %}
+</section>
+{% endblock %}

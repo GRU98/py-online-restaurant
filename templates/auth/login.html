@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>смакок - Авторизація</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" href="/static/favicon.svg?v=4" type="image/svg+xml">
+</head>
+<body class="auth-body">
+
+    <div class="auth-container{% if mode == 'register' %} active{% endif %}" id="authBox">
+
+        <!-- Sign In form (left half) -->
+        <div class="auth-form-wrap auth-signin">
+            <form action="/login" method="post" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <h1>Вхід</h1>
+                <p class="auth-hint">Введіть нікнейм та пароль</p>
+                {% for message in get_flashed_messages(category_filter=["danger_login"]) %}
+                    <div class="auth-flash"><i class="fa-solid fa-circle-exclamation"></i> {{ message }}</div>
+                {% endfor %}
+                <div class="auth-field">
+                    <label for="login-nick">Нікнейм</label>
+                    <input id="login-nick" type="text" name="nickname" placeholder="Введіть нікнейм" autocomplete="username" required>
+                </div>
+                <div class="auth-field">
+                    <label for="login-pass">Пароль</label>
+                    <input id="login-pass" type="password" name="password" placeholder="Введіть пароль" autocomplete="current-password" required>
+                </div>
+                <button type="submit" class="auth-submit">Увійти</button>
+                <p style="text-align:center;margin-top:0.8rem;">
+                    <a href="#" id="forgotPassLink" style="color:var(--gold);font-size:0.85rem;text-decoration:none;">Забули пароль?</a>
+                </p>
+            </form>
+        </div>
+
+        <!-- Sign Up form (left half, AJAX) -->
+        <div class="auth-form-wrap auth-signup">
+            <form id="regForm" novalidate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <h1>Реєстрація</h1>
+                <p class="auth-hint">Введіть дані для створення акаунту</p>
+                <div id="regError" class="auth-flash" style="display:none;"><i class="fa-solid fa-circle-exclamation"></i> <span></span></div>
+                <div class="auth-field">
+                    <label for="reg-nick">Нікнейм</label>
+                    <input id="reg-nick" type="text" name="nickname" placeholder="Придумайте нікнейм" autocomplete="username" required>
+                </div>
+                <div class="auth-field">
+                    <label for="reg-email">Електронна пошта</label>
+                    <input id="reg-email" type="email" name="email" placeholder="email@example.com" autocomplete="email" required>
+                </div>
+                <div class="auth-field">
+                    <label for="reg-pass">Пароль</label>
+                    <input id="reg-pass" type="password" name="password" placeholder="Мінімум 8 символів" autocomplete="new-password" minlength="8" required>
+                </div>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0.5rem 0 0.8rem;font-size:0.85rem;color:var(--text-secondary);">
+                    <input type="checkbox" name="newsletter" id="reg-newsletter" style="width:18px;height:18px;accent-color:var(--gold);">
+                    Отримувати розсилку про знижки
+                </label>
+                <button type="submit" class="auth-submit" id="regBtn">Зареєструватися</button>
+            </form>
+        </div>
+
+        <!-- Sliding overlay panel -->
+        <div class="auth-overlay">
+            <div class="auth-overlay-inner">
+                <div class="auth-overlay-panel auth-overlay-left">
+                    <h1>З поверненням!</h1>
+                    <p>Увійдіть, щоб отримати доступ до всіх можливостей</p>
+                    <button class="auth-ghost-btn" id="btnGoLogin" type="button">Увійти</button>
+                </div>
+                <div class="auth-overlay-panel auth-overlay-right">
+                    <h1>Вітаємо!</h1>
+                    <p>Зареєструйтесь, щоб замовляти страви та бронювати столики</p>
+                    <button class="auth-ghost-btn" id="btnGoRegister" type="button">Зареєструватися</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Verification modal -->
+    <div class="verify-backdrop" id="verifyBackdrop">
+        <div class="verify-modal" id="verifyModal">
+            <h2>Перевірте пошту</h2>
+            <p class="verify-desc">Ми надіслали 4-значний код на <strong id="verifyEmail"></strong></p>
+            <div id="verifyTimer" style="text-align:center;margin:0.5rem 0 1rem;font-size:0.9rem;color:var(--gold);font-weight:600;"></div>
+            <div class="verify-code-row" id="codeRow">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="verify-digit" data-idx="0" autocomplete="one-time-code">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="verify-digit" data-idx="1">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="verify-digit" data-idx="2">
+                <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="verify-digit" data-idx="3">
+            </div>
+            <div id="verifyError" class="verify-error" style="display:none;"></div>
+            <button type="button" class="auth-submit verify-btn" id="verifyBtn">Підтвердити</button>
+            <button type="button" class="btn-outline" id="resendBtn" style="margin-top:0.8rem;width:100%;display:none;">Надіслати код повторно</button>
+        </div>
+    </div>
+
+    <!-- Success overlay -->
+    <div class="verify-success-overlay" id="successOverlay">
+        <div class="verify-success-content">
+            <svg class="verify-checkmark" viewBox="0 0 52 52">
+                <circle class="verify-checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                <path class="verify-checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+            </svg>
+            <p class="verify-success-text">Email успішно підтверджено!</p>
+        </div>
+    </div>
+
+    <!-- Forgot password modal -->
+    <div class="verify-backdrop" id="forgotBackdrop">
+        <div class="verify-modal" style="width:460px;max-width:calc(100vw - 2rem);">
+            <!-- Step 1: enter email -->
+            <div id="fpStep1">
+                <h2>Відновлення пароля</h2>
+                <p class="verify-desc">Введіть email, на який зареєстровано акаунт. Ми надішлемо 6-значний код.</p>
+                <div class="auth-field" style="margin-bottom:1rem;">
+                    <input id="fpEmail" type="email" placeholder="email@example.com" autocomplete="email" style="width:100%;box-sizing:border-box;">
+                </div>
+                <div id="fpError1" class="verify-error" style="display:none;"></div>
+                <button type="button" class="auth-submit verify-btn" id="fpSendBtn">Надіслати код</button>
+                <p style="text-align:center;margin-top:0.8rem;">
+                    <a href="#" id="fpBackToLogin" style="color:var(--text-secondary);font-size:0.85rem;text-decoration:none;">Повернутися до входу</a>
+                </p>
+            </div>
+            <!-- Step 2: enter 6-digit code -->
+            <div id="fpStep2" style="display:none;">
+                <h2>Введіть код</h2>
+                <p class="verify-desc">Ми надіслали 6-значний код на <strong id="fpEmailDisplay"></strong></p>
+                <div class="verify-code-row" id="fpCodeRow">
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="verify-digit fp-digit" data-idx="0">
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="verify-digit fp-digit" data-idx="1">
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="verify-digit fp-digit" data-idx="2">
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="verify-digit fp-digit" data-idx="3">
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="verify-digit fp-digit" data-idx="4">
+                    <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" class="verify-digit fp-digit" data-idx="5">
+                </div>
+                <div id="fpError2" class="verify-error" style="display:none;"></div>
+                <button type="button" class="auth-submit verify-btn" id="fpVerifyBtn">Далі</button>
+            </div>
+            <!-- Step 3: new password -->
+            <div id="fpStep3" style="display:none;">
+                <h2>Новий пароль</h2>
+                <p class="verify-desc">Придумайте новий пароль (мінімум 8 символів).</p>
+                <div class="auth-field" style="margin-bottom:0.5rem;">
+                    <input id="fpNewPass" type="password" placeholder="Новий пароль" minlength="8" autocomplete="new-password" style="width:100%;box-sizing:border-box;">
+                </div>
+                <div class="auth-field" style="margin-bottom:1rem;">
+                    <input id="fpNewPassConfirm" type="password" placeholder="Підтвердіть пароль" minlength="8" autocomplete="new-password" style="width:100%;box-sizing:border-box;">
+                </div>
+                <div id="fpError3" class="verify-error" style="display:none;"></div>
+                <button type="button" class="auth-submit verify-btn" id="fpSetPassBtn">Змінити пароль</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        var box = document.getElementById('authBox');
+        document.getElementById('btnGoRegister').addEventListener('click', function() { box.classList.add('active'); });
+        document.getElementById('btnGoLogin').addEventListener('click', function() { box.classList.remove('active'); });
+
+        /* ── Registration AJAX ── */
+        var regForm = document.getElementById('regForm');
+        var regBtn = document.getElementById('regBtn');
+        var regError = document.getElementById('regError');
+        var regErrorSpan = regError.querySelector('span');
+        var pendingEmail = '';
+        var csrf = regForm.querySelector('[name=csrf_token]').value;
+
+        function showRegError(msg) {
+            regErrorSpan.textContent = msg;
+            regError.style.display = 'flex';
+        }
+
+        regForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            regError.style.display = 'none';
+            var nick = document.getElementById('reg-nick').value.trim();
+            var email = document.getElementById('reg-email').value.trim();
+            var pass = document.getElementById('reg-pass').value;
+            if (!nick || !email || pass.length < 8) {
+                showRegError('Заповніть усі поля (пароль мін. 8 символів).');
+                return;
+            }
+            regBtn.disabled = true;
+            regBtn.textContent = 'Відправка\u2026';
+
+            var fd = new FormData();
+            fd.append('csrf_token', csrf);
+            fd.append('nickname', nick);
+            fd.append('email', email);
+            fd.append('password', pass);
+            if (document.getElementById('reg-newsletter').checked) fd.append('newsletter', 'on');
+
+            fetch('/register', { method: 'POST', body: fd, credentials: 'same-origin' })
+            .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+            .then(function(res) {
+                if (!res.ok) {
+                    showRegError(res.data.error || 'Помилка реєстрації.');
+                    regBtn.disabled = false;
+                    regBtn.textContent = 'Зареєструватися';
+                    return;
+                }
+                pendingEmail = res.data.email;
+                openVerifyModal(pendingEmail);
+                regBtn.disabled = false;
+                regBtn.textContent = 'Зареєструватися';
+            })
+            .catch(function() {
+                showRegError('Помилка мережі.');
+                regBtn.disabled = false;
+                regBtn.textContent = 'Зареєструватися';
+            });
+        });
+
+        /* Enter on password field submits */
+        document.getElementById('reg-pass').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); regForm.dispatchEvent(new Event('submit')); }
+        });
+
+        /* ── Verify modal ── */
+        var backdrop = document.getElementById('verifyBackdrop');
+        var modal = document.getElementById('verifyModal');
+        var digits = document.querySelectorAll('#codeRow .verify-digit');
+        var verifyBtn = document.getElementById('verifyBtn');
+        var verifyError = document.getElementById('verifyError');
+        var verifyEmailEl = document.getElementById('verifyEmail');
+        var verifyTimer = document.getElementById('verifyTimer');
+        var resendBtn = document.getElementById('resendBtn');
+        var timerInterval = null;
+        var expiryTime = null;
+
+        function openVerifyModal(email) {
+            verifyEmailEl.textContent = email;
+            verifyError.style.display = 'none';
+            digits.forEach(function(d) { d.value = ''; });
+            backdrop.classList.add('open');
+            startTimer();
+            setTimeout(function() { digits[0].focus(); }, 300);
+        }
+
+        function startTimer() {
+            expiryTime = Date.now() + 60000;
+            resendBtn.style.display = 'none';
+            verifyTimer.style.display = 'block';
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 100);
+            updateTimer();
+        }
+
+        function updateTimer() {
+            var remaining = Math.max(0, expiryTime - Date.now());
+            if (remaining <= 0) {
+                clearInterval(timerInterval);
+                verifyTimer.textContent = 'Код прострочений';
+                verifyTimer.style.color = 'var(--danger)';
+                resendBtn.style.display = 'block';
+                return;
+            }
+            var secs = Math.ceil(remaining / 1000);
+            verifyTimer.textContent = 'Код дійсний ще ' + secs + ' сек';
+            verifyTimer.style.color = secs <= 10 ? 'var(--danger)' : 'var(--gold)';
+        }
+
+        resendBtn.addEventListener('click', function() {
+            resendBtn.disabled = true;
+            resendBtn.textContent = 'Надсилання…';
+            var fd = new FormData();
+            fd.append('csrf_token', csrf);
+            fd.append('nickname', document.getElementById('reg-nick').value.trim());
+            fd.append('email', pendingEmail);
+            fd.append('password', document.getElementById('reg-pass').value);
+            if (document.getElementById('reg-newsletter').checked) fd.append('newsletter', 'on');
+            fetch('/register', { method: 'POST', body: fd, credentials: 'same-origin' })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.ok) {
+                    startTimer();
+                    verifyError.style.display = 'none';
+                    digits.forEach(function(d) { d.value = ''; });
+                    digits[0].focus();
+                }
+                resendBtn.disabled = false;
+                resendBtn.textContent = 'Надіслати код повторно';
+            })
+            .catch(function() {
+                resendBtn.disabled = false;
+                resendBtn.textContent = 'Надіслати код повторно';
+            });
+        });
+
+        /* Digit inputs: auto-advance, backspace, paste */
+        digits.forEach(function(inp, i) {
+            inp.addEventListener('input', function() {
+                var v = inp.value.replace(/\D/g, '');
+                inp.value = v ? v[0] : '';
+                if (v && i < 3) digits[i + 1].focus();
+                if (i === 3 && v) tryAutoSubmit();
+            });
+            inp.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && !inp.value && i > 0) {
+                    digits[i - 1].focus();
+                    digits[i - 1].value = '';
+                }
+                if (e.key === 'Enter') { e.preventDefault(); submitCode(); }
+            });
+            inp.addEventListener('paste', function(e) {
+                e.preventDefault();
+                var text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+                for (var j = 0; j < 4; j++) {
+                    digits[j].value = text[j] || '';
+                }
+                if (text.length >= 4) { digits[3].focus(); tryAutoSubmit(); }
+                else if (text.length > 0) digits[Math.min(text.length, 3)].focus();
+            });
+        });
+
+        function tryAutoSubmit() {
+            var code = '';
+            digits.forEach(function(d) { code += d.value; });
+            if (code.length === 4) submitCode();
+        }
+
+        verifyBtn.addEventListener('click', submitCode);
+
+        function submitCode() {
+            var code = '';
+            digits.forEach(function(d) { code += d.value; });
+            if (code.length !== 4) {
+                verifyError.textContent = 'Введіть 4-значний код.';
+                verifyError.style.display = 'block';
+                return;
+            }
+            verifyError.style.display = 'none';
+            verifyBtn.disabled = true;
+            verifyBtn.textContent = 'Перевірка\u2026';
+
+            fetch('/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+                body: JSON.stringify({ email: pendingEmail, code: code, csrf_token: csrf }),
+                credentials: 'same-origin'
+            })
+            .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+            .then(function(res) {
+                if (!res.ok) {
+                    verifyError.textContent = res.data.error || 'Невірний код.';
+                    verifyError.style.display = 'block';
+                    digits.forEach(function(d) { d.value = ''; });
+                    digits[0].focus();
+                    verifyBtn.disabled = false;
+                    verifyBtn.textContent = 'Підтвердити';
+                    return;
+                }
+                backdrop.classList.remove('open');
+                showSuccess();
+            })
+            .catch(function() {
+                verifyError.textContent = 'Помилка мережі.';
+                verifyError.style.display = 'block';
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = 'Підтвердити';
+            });
+        }
+
+        /* ── Success overlay ── */
+        function showSuccess() {
+            var overlay = document.getElementById('successOverlay');
+            overlay.classList.add('open');
+            setTimeout(function() { window.location.href = '/'; }, 2200);
+        }
+
+        /* ══════ FORGOT PASSWORD ══════ */
+        var fpBackdrop = document.getElementById('forgotBackdrop');
+        var fpStep1 = document.getElementById('fpStep1');
+        var fpStep2 = document.getElementById('fpStep2');
+        var fpStep3 = document.getElementById('fpStep3');
+        var fpEmailInput = document.getElementById('fpEmail');
+        var fpEmailDisplay = document.getElementById('fpEmailDisplay');
+        var fpSendBtn = document.getElementById('fpSendBtn');
+        var fpVerifyBtn = document.getElementById('fpVerifyBtn');
+        var fpSetPassBtn = document.getElementById('fpSetPassBtn');
+        var fpError1 = document.getElementById('fpError1');
+        var fpError2 = document.getElementById('fpError2');
+        var fpError3 = document.getElementById('fpError3');
+        var fpDigits = document.querySelectorAll('.fp-digit');
+        var fpEmail = '';
+        var fpCode = '';
+
+        document.getElementById('forgotPassLink').addEventListener('click', function(e) {
+            e.preventDefault();
+            fpStep1.style.display = ''; fpStep2.style.display = 'none'; fpStep3.style.display = 'none';
+            fpError1.style.display = 'none'; fpEmailInput.value = '';
+            fpSendBtn.disabled = false; fpSendBtn.textContent = 'Надіслати код';
+            fpBackdrop.classList.add('open');
+            setTimeout(function() { fpEmailInput.focus(); }, 300);
+        });
+
+        document.getElementById('fpBackToLogin').addEventListener('click', function(e) {
+            e.preventDefault();
+            fpBackdrop.classList.remove('open');
+        });
+
+        /* Step 1: send code */
+        fpSendBtn.addEventListener('click', function() {
+            fpError1.style.display = 'none';
+            fpEmail = fpEmailInput.value.trim().toLowerCase();
+            if (!fpEmail || fpEmail.indexOf('@') === -1) {
+                fpError1.textContent = 'Введіть коректний email.';
+                fpError1.style.display = 'block'; return;
+            }
+            fpSendBtn.disabled = true; fpSendBtn.textContent = 'Надсилання\u2026';
+            fetch('/api/forgot-password', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json', 'X-CSRF-Token': csrf},
+                body: JSON.stringify({email: fpEmail, csrf_token: csrf}),
+                credentials: 'same-origin'
+            })
+            .then(function(r) { return r.json().then(function(d) { return {ok:r.ok, data:d}; }); })
+            .then(function(res) {
+                if (!res.ok && res.data.error) {
+                    fpError1.textContent = res.data.error;
+                    fpError1.style.display = 'block';
+                    fpSendBtn.disabled = false; fpSendBtn.textContent = 'Надіслати код';
+                    return;
+                }
+                fpEmailDisplay.textContent = fpEmail;
+                fpStep1.style.display = 'none'; fpStep2.style.display = '';
+                fpDigits.forEach(function(d) { d.value = ''; });
+                fpError2.style.display = 'none';
+                fpVerifyBtn.disabled = false; fpVerifyBtn.textContent = 'Далі';
+                setTimeout(function() { fpDigits[0].focus(); }, 200);
+            })
+            .catch(function() {
+                fpError1.textContent = 'Помилка мережі.';
+                fpError1.style.display = 'block';
+                fpSendBtn.disabled = false; fpSendBtn.textContent = 'Надіслати код';
+            });
+        });
+
+        /* Step 2: digit inputs */
+        fpDigits.forEach(function(inp, i) {
+            inp.addEventListener('input', function() {
+                var v = inp.value.replace(/\D/g, '');
+                inp.value = v ? v[0] : '';
+                if (v && i < 5) fpDigits[i + 1].focus();
+                if (i === 5 && v) fpTryAutoNext();
+            });
+            inp.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && !inp.value && i > 0) {
+                    fpDigits[i - 1].focus(); fpDigits[i - 1].value = '';
+                }
+                if (e.key === 'Enter') { e.preventDefault(); fpGoToStep3(); }
+            });
+            inp.addEventListener('paste', function(e) {
+                e.preventDefault();
+                var text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+                for (var j = 0; j < 6; j++) { fpDigits[j].value = text[j] || ''; }
+                if (text.length >= 6) { fpDigits[5].focus(); fpTryAutoNext(); }
+                else if (text.length > 0) fpDigits[Math.min(text.length, 5)].focus();
+            });
+        });
+
+        function fpTryAutoNext() {
+            var c = '';
+            fpDigits.forEach(function(d) { c += d.value; });
+            if (c.length === 6) fpGoToStep3();
+        }
+
+        fpVerifyBtn.addEventListener('click', fpGoToStep3);
+
+        function fpGoToStep3() {
+            fpCode = '';
+            fpDigits.forEach(function(d) { fpCode += d.value; });
+            if (fpCode.length !== 6) {
+                fpError2.textContent = 'Введіть 6-значний код.';
+                fpError2.style.display = 'block'; return;
+            }
+            fpError2.style.display = 'none';
+            fpVerifyBtn.disabled = true; fpVerifyBtn.textContent = 'Перевірка\u2026';
+            fetch('/api/forgot-password/check-code', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json', 'X-CSRF-Token': csrf},
+                body: JSON.stringify({email: fpEmail, code: fpCode, csrf_token: csrf}),
+                credentials: 'same-origin'
+            })
+            .then(function(r) { return r.json().then(function(d) { return {ok:r.ok, data:d}; }); })
+            .then(function(res) {
+                if (!res.ok) {
+                    fpError2.textContent = res.data.error || 'Невірний код.';
+                    fpError2.style.display = 'block';
+                    fpDigits.forEach(function(d) { d.value = ''; });
+                    fpDigits[0].focus();
+                    fpVerifyBtn.disabled = false; fpVerifyBtn.textContent = 'Далі';
+                    return;
+                }
+                fpStep2.style.display = 'none'; fpStep3.style.display = '';
+                fpError3.style.display = 'none';
+                document.getElementById('fpNewPass').value = '';
+                document.getElementById('fpNewPassConfirm').value = '';
+                fpSetPassBtn.disabled = false; fpSetPassBtn.textContent = 'Змінити пароль';
+                setTimeout(function() { document.getElementById('fpNewPass').focus(); }, 200);
+            })
+            .catch(function() {
+                fpError2.textContent = 'Помилка мережі.';
+                fpError2.style.display = 'block';
+                fpVerifyBtn.disabled = false; fpVerifyBtn.textContent = 'Далі';
+            });
+        }
+
+        /* Step 3: set new password */
+        fpSetPassBtn.addEventListener('click', function() {
+            fpError3.style.display = 'none';
+            var pw = document.getElementById('fpNewPass').value;
+            var pw2 = document.getElementById('fpNewPassConfirm').value;
+            if (pw.length < 8) { fpError3.textContent = 'Мінімум 8 символів.'; fpError3.style.display = 'block'; return; }
+            if (pw !== pw2) { fpError3.textContent = 'Паролі не збігаються.'; fpError3.style.display = 'block'; return; }
+            fpSetPassBtn.disabled = true; fpSetPassBtn.textContent = 'Збереження\u2026';
+            fetch('/api/forgot-password/verify', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json', 'X-CSRF-Token': csrf},
+                body: JSON.stringify({email: fpEmail, code: fpCode, new_password: pw, csrf_token: csrf}),
+                credentials: 'same-origin'
+            })
+            .then(function(r) { return r.json().then(function(d) { return {ok:r.ok, data:d}; }); })
+            .then(function(res) {
+                if (!res.ok) {
+                    fpError3.textContent = res.data.error || 'Помилка.';
+                    fpError3.style.display = 'block';
+                    fpSetPassBtn.disabled = false; fpSetPassBtn.textContent = 'Змінити пароль';
+                    return;
+                }
+                fpBackdrop.classList.remove('open');
+                showPasswordSuccess();
+            })
+            .catch(function() {
+                fpError3.textContent = 'Помилка мережі.';
+                fpError3.style.display = 'block';
+                fpSetPassBtn.disabled = false; fpSetPassBtn.textContent = 'Змінити пароль';
+            });
+        });
+
+        function showPasswordSuccess() {
+            var overlay = document.getElementById('successOverlay');
+            document.querySelector('.verify-success-text').textContent = 'Пароль успішно змінено!';
+            overlay.classList.add('open');
+            setTimeout(function() { window.location.href = '/login'; }, 2200);
+        }
+    })();
+    </script>
+</body>
+</html>

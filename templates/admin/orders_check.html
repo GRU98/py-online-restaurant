@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+    <h2>Замовлення гостей</h2>
+    {% include '_admin_navigation.html' %}
+    {% if all_orders %}
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Користувач</th>
+                <th>Дата</th>
+                <th>Клієнт</th>
+                <th>Телефон</th>
+                <th>Адреса</th>
+                <th>Оплата</th>
+                <th>Сума</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for order in all_orders %}
+                <tr>
+                    <td>{{ order.id }}</td>
+                    <td>{{ order.user.nickname }}</td>
+                    <td>{{ order.order_time.strftime('%d.%m.%Y %H:%M') }}</td>
+                    <td>{{ order.customer_name }}</td>
+                    <td>{{ order.customer_phone }}</td>
+                    <td>{{ order.customer_address }}</td>
+                    <td>{{ 'Карта' if order.payment_method == 'card' else 'Готівка' }}</td>
+                    <td>{{ '{:.2f}'.format(order.total_cost) }} грн</td>
+                    <td><a class="btn btn-sm" href="/my_order/{{ order.id }}">Деталі</a></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Замовлень поки немає.</p>
+    {% endif %}
+</section>
+{% endblock %}

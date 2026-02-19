@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+    <h2><i class="fa-solid fa-calendar-check" style="color:var(--gold);"></i> Мої бронювання</h2>
+    {% if reservations %}
+        <table>
+            <thead>
+            <tr>
+                <th>Столик</th>
+                <th>Місць</th>
+                <th>Дата</th>
+                <th>Час</th>
+                <th>Передоплата</th>
+                <th>Статус</th>
+                <th>Рахунок</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for res in reservations %}
+                <tr>
+                    <td><strong style="color:var(--gold);">{{ res.table.label if res.table else '—' }}</strong></td>
+                    <td>{{ res.table.capacity if res.table else '—' }}</td>
+                    <td>{{ res.time_start.strftime('%d.%m.%Y') }}</td>
+                    <td>{{ res.time_start.strftime('%H:%M') }} — {{ res.time_end.strftime('%H:%M') }}</td>
+                    <td style="color:var(--gold);font-weight:600;">{{ res.prepaid|round(0)|int }} грн</td>
+                    <td>
+                        {% if res.cancelled %}
+                            <span style="color:var(--crimson);font-weight:600;">Скасовано</span>
+                        {% else %}
+                            <span style="color:var(--success);font-weight:600;">Активне</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="/invoice/reservation/{{ res.id }}" target="_blank" style="color:var(--gold);font-size:0.85rem;">
+                            <i class="fa-solid fa-file-invoice"></i> Рахунок
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>У вас ще немає бронювань. <a href="/reserved">Забронювати столик</a>.</p>
+    {% endif %}
+    <p style="margin-top:1.5rem;"><a href="/profile">← Повернутися до профілю</a></p>
+</section>
+{% endblock %}

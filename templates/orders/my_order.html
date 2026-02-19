@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+    <h2>Замовлення №{{ order.id }}</h2>
+    {% if order.invoice_number %}
+    <p><strong>Рахунок:</strong> <a href="/invoice/{{ order.id }}" target="_blank" style="color:var(--gold);"><i class="fa-solid fa-file-invoice"></i> {{ order.invoice_number }}</a></p>
+    {% endif %}
+    <p><strong>Дата:</strong> {{ order.order_time.strftime('%d.%m.%Y %H:%M') }}</p>
+    <p><strong>Сума:</strong> {{ '{:.2f}'.format(total_price) }} грн</p>
+    <p><strong>Клієнт:</strong> {{ order.customer_name }}</p>
+    <p><strong>Телефон:</strong> {{ order.customer_phone }}</p>
+    <p><strong>Адреса:</strong> {{ order.customer_address }}</p>
+    <p><strong>Оплата:</strong> {{ 'Карта' if order.payment_method == 'card' else 'Готівка' }}</p>
+    {% if order.delivery_notes %}
+        <p><strong>Коментар:</strong> {{ order.delivery_notes }}</p>
+    {% endif %}
+
+    <h3>Позиції</h3>
+    <table>
+        <thead><tr><th>Страва</th><th>Кількість</th></tr></thead>
+        <tbody>
+        {% for name, quantity in order.order_list.items() %}
+            <tr><td>{{ name }}</td><td>{{ quantity }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <form method="post" style="margin-top: 1.5rem;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="action" value="cancel">
+        <button type="submit" class="btn-danger">Скасувати замовлення</button>
+    </form>
+    <p style="margin-top: 1rem;"><a href="/my_orders">← Повернутися до списку</a></p>
+</section>
+{% endblock %}

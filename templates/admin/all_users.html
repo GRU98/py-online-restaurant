@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+    <h2>Усі користувачі</h2>
+    {% include '_admin_navigation.html' %}
+    {% if users %}
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Нікнейм</th>
+                <th>Email</th>
+                <th>Статус</th>
+                <th>Розсилка</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.nickname }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>
+                        {% if user.is_verified %}
+                            <span class="pill-tag" style="font-size:0.72rem;">Підтверджений</span>
+                        {% else %}
+                            <span class="pill-tag" style="font-size:0.72rem;background:rgba(192,57,43,0.1);color:var(--crimson-light);border-color:rgba(192,57,43,0.15);">Не підтверджений</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if user.newsletter_opt_in %}
+                            <span style="color:var(--gold);"><i class="fa-solid fa-bell"></i></span>
+                        {% else %}
+                            <span style="color:var(--text-muted);"><i class="fa-solid fa-bell-slash"></i></span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Користувачів поки що немає.</p>
+    {% endif %}
+</section>
+{% endblock %}

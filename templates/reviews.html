@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero-banner hero-bg" style="padding: 2.5rem 2rem;">
+    <img class="hero-bg-img" src="https://images.unsplash.com/photo-1552566626-52f8b828add9?w=1920&q=85" alt="" loading="eager">
+    <h2 class="shimmer-text">Відгуки наших гостей</h2>
+    <p>Середня оцінка: <strong>{{ avg_stars }}</strong> / 5
+        {% for i in range(avg_stars|int) %}<i class="fa-solid fa-star" style="color: #f5c542;"></i>{% endfor %}
+        {% for i in range(5 - avg_stars|int) %}<i class="fa-regular fa-star" style="color: #f5c542;"></i>{% endfor %}
+    </p>
+</section>
+
+{% if logged_user and not is_admin %}
+<section style="text-align:center;margin-bottom:0;">
+    <a href="/profile#myReviewSection" class="btn" style="display:inline-flex;align-items:center;gap:8px;">
+        <i class="fa-solid fa-pen"></i> Залишити або редагувати відгук
+    </a>
+</section>
+{% endif %}
+
+<section id="reviewsList">
+    <h3>Усі відгуки ({{ reviews|length }})</h3>
+    {% if reviews %}
+        {% for review in reviews %}
+        <div class="review-card animate-in{% if logged_user and review.user_id == logged_user.id %} own-review{% endif %}">
+            <div class="review-header">
+                <strong>{{ review.user.nickname }}</strong>
+                {% if logged_user and review.user_id == logged_user.id %}
+                <span class="pill-tag" style="font-size:0.7rem;margin-left:6px;">Ваш відгук</span>
+                {% endif %}
+                <span class="review-date">{{ review.created_at.strftime('%d.%m.%Y') }}</span>
+            </div>
+            <div class="review-stars">
+                {% for i in range(review.stars) %}<i class="fa-solid fa-star"></i>{% endfor %}
+                {% for i in range(5 - review.stars) %}<i class="fa-regular fa-star"></i>{% endfor %}
+            </div>
+            <p class="review-text">{{ review.text }}</p>
+            {% if is_admin %}
+            <button class="btn-sm btn-danger review-delete-btn" data-review-id="{{ review.id }}" type="button" style="margin-top: 0.8rem;">
+                <i class="fa-solid fa-trash"></i> Видалити
+            </button>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>Відгуків поки немає. Будьте першим!</p>
+    {% endif %}
+</section>
+{% endblock %}

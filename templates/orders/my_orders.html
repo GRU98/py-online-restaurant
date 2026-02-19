@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+    <h2><i class="fa-solid fa-receipt" style="color:var(--gold);"></i> Мої замовлення</h2>
+    {% if orders %}
+        <table>
+            <thead>
+            <tr>
+                <th>№</th>
+                <th>Рахунок</th>
+                <th>Дата</th>
+                <th>Сума</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for order in orders %}
+                <tr>
+                    <td>{{ order.id }}</td>
+                    <td>
+                        {% if order.invoice_number %}
+                        <a href="/invoice/{{ order.id }}" target="_blank" style="color:var(--gold);font-size:0.85rem;">
+                            <i class="fa-solid fa-file-invoice"></i> {{ order.invoice_number }}
+                        </a>
+                        {% else %}—{% endif %}
+                    </td>
+                    <td>{{ order.order_time.strftime('%d.%m.%Y %H:%M') }}</td>
+                    <td style="color:var(--gold);font-weight:600;">{{ '{:.2f}'.format(order.total_cost) }} грн</td>
+                    <td><a class="btn btn-sm" href="/my_order/{{ order.id }}">Деталі</a></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Ви ще не замовляли страв. Перегляньте <a href="/menu">меню</a>, щоб розпочати.</p>
+    {% endif %}
+    <p style="margin-top:1.5rem;"><a href="/profile">← Повернутися до профілю</a></p>
+</section>
+{% endblock %}

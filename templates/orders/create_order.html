@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .address-suggestions {
+        position: relative;
+    }
+    .address-suggestions__list {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 100%;
+        z-index: 20;
+        background: var(--card-bg, #14141c);
+        border: 1px solid rgba(198,167,94,0.2);
+        border-radius: 12px;
+        margin-top: 6px;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+        max-height: 320px;
+        overflow-y: auto;
+    }
+    .address-suggestions__list::-webkit-scrollbar {
+        width: 8px;
+    }
+    .address-suggestions__list::-webkit-scrollbar-track {
+        background: rgba(198,167,94,0.05);
+        border-radius: 4px;
+    }
+    .address-suggestions__list::-webkit-scrollbar-thumb {
+        background: rgba(198,167,94,0.3);
+        border-radius: 4px;
+    }
+    .address-suggestions__list::-webkit-scrollbar-thumb:hover {
+        background: rgba(198,167,94,0.5);
+    }
+    .address-suggestions__item {
+        padding: 12px 16px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        border-bottom: 1px solid rgba(198,167,94,0.08);
+        color: var(--text-default, #f5f3ea);
+    }
+    .address-suggestions__item:last-child {
+        border-bottom: none;
+    }
+    .address-suggestions__item:hover {
+        background: rgba(198,167,94,0.08);
+    }
+</style>
+<section class="card">
+    <h2>Оформлення замовлення</h2>
+    {% if basket %}
+        <ul style="margin-bottom: 1.5rem;">
+            {% for name, amount in basket.items() %}
+                <li><strong>{{ name }}</strong> — кількість: {{ amount }}</li>
+            {% endfor %}
+        </ul>
+        <form method="post" class="form-grid">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div>
+                <label for="customer_name">Повне ім'я</label>
+                <input id="customer_name" type="text" name="customer_name" value="{{ form_data.customer_name }}" required>
+            </div>
+            <div>
+                <label for="customer_phone">Телефон</label>
+                <input id="customer_phone" type="tel" name="customer_phone" value="{{ form_data.customer_phone }}" required>
+            </div>
+            <div class="address-suggestions">
+                <label for="customer_address">Адреса доставки</label>
+                <input id="customer_address" type="text" name="customer_address" value="{{ form_data.customer_address }}" autocomplete="off" required>
+                <button type="button" id="check-address-btn" class="btn" style="margin-top:0.5rem;padding:8px 16px;font-size:0.9rem;">
+                    <i class="fa-solid fa-location-dot"></i> Перевірити адресу на зону досяжності
+                </button>
+                <div id="address-status" style="margin-top:0.4rem;font-size:0.85rem;min-height:1.2em;"></div>
+                <div id="address-suggestions" class="address-suggestions__list" hidden></div>
+                <input type="hidden" name="customer_lat" id="customer_lat" value="{{ form_data.customer_lat|default('') }}">
+                <input type="hidden" name="customer_lon" id="customer_lon" value="{{ form_data.customer_lon|default('') }}">
+            </div>
+            <div>
+                <label for="delivery_notes">Побажання до доставки</label>
+                <textarea id="delivery_notes" name="delivery_notes" rows="3">{{ form_data.delivery_notes }}</textarea>
+            </div>
+            <div>
+                <label>Метод оплати</label>
+                <label style="font-weight: 400;"><input type="radio" name="payment_method" value="card" {% if form_data.payment_method == 'card' %}checked{% endif %}> Банківська карта</label>
+                <label style="font-weight: 400;"><input type="radio" name="payment_method" value="cash" {% if form_data.payment_method == 'cash' %}checked{% endif %}> Готівка</label>
+            </div>
+            <div>
+                <button type="submit">Підтвердити замовлення</button>
+            </div>
+        </form>
+    {% else %}
+        <p>Ваш кошик порожній. Поверніться до <a href="/menu">меню</a>, щоб додати позиції.</p>
+    {% endif %}
+</section>
+
+<script>
+(function() {
+    const addrInput = document.getElementById('customer_address');
+    const statusDiv = document.getElementById('address-status');
+    const submitBtn = document.querySelector('form.form-grid button[type="submit"]');
+    const suggestionsBox = document.getElementById('address-suggestions');
+    const latField = document.getElementById('customer_lat');
+    const lonField = document.getElementById('customer_lon');
+    if (!addrInput || !statusDiv) return;
+
+    let timer = null;
+    let lastChecked = '';
+    let addressOk = false;
+    let suggestTimer = null;
+
+    function getCsrf() {
+        return fetch('/api/csrf', {credentials:'same-origin'}).then(r => r.json()).then(d => d.csrfToken);
+    }
+
+    function checkAddress(address, coords) {
+        if (address === lastChecked) return;
+        lastChecked = address;
+
+        if (address.length < 5) {
+            statusDiv.textContent = '';
+            addressOk = false;
+            if (latField) latField.value = '';
+            if (lonField) lonField.value = '';
+            return;
+        }
+
+        statusDiv.textContent = 'Перевіряємо адресу...';
+        statusDiv.style.color = 'var(--text-muted, #888)';
+
+        const payload = {address: address};
+        if (coords && typeof coords.lat === 'number' && typeof coords.lon === 'number') {
+            payload.lat = coords.lat;
+            payload.lon = coords.lon;
+        }
+
+        getCsrf().then(csrf => {
+            return fetch('/api/check_address', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrf},
+                credentials: 'same-origin',
+                body: JSON.stringify(payload)
+            });
+        })
+        .then(r => r.json().then(data => ({status: r.status, data})))
+        .then(({status, data}) => {
+            if (addrInput.value.trim() !== address) return;
+            if (data.ok) {
+                statusDiv.innerHTML = '<i class="fa-solid fa-circle-check"></i> Адреса в зоні доставки (' + data.distance_km + ' км)';
+                statusDiv.style.color = '#2ecc71';
+                addressOk = true;
+                if (latField && typeof data.lat === 'number') latField.value = data.lat;
+                if (lonField && typeof data.lon === 'number') lonField.value = data.lon;
+            } else {
+                statusDiv.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> ' + (data.error || 'Адреса поза зоною доставки');
+                statusDiv.style.color = '#e74c3c';
+                addressOk = false;
+                if (latField) latField.value = '';
+                if (lonField) lonField.value = '';
+            }
+        })
+        .catch(() => {
+            statusDiv.textContent = 'Помилка перевірки адреси';
+            statusDiv.style.color = 'var(--text-muted, #888)';
+            addressOk = false;
+            if (latField) latField.value = '';
+            if (lonField) lonField.value = '';
+        });
+    }
+
+    function clearSuggestions() {
+        if (!suggestionsBox) return;
+        suggestionsBox.innerHTML = '';
+        suggestionsBox.hidden = true;
+    }
+
+    function showSuggestions(items) {
+        if (!suggestionsBox) return;
+        if (!items.length) {
+            clearSuggestions();
+            return;
+        }
+        suggestionsBox.innerHTML = items.map(item => `
+            <div class="address-suggestions__item" data-lat="${item.lat}" data-lon="${item.lon}" data-address="${item.displayName.replace(/"/g, '&quot;')}">
+                ${item.displayName}
+            </div>
+        `).join('');
+        suggestionsBox.hidden = false;
+    }
+
+    function fetchSuggestions(query) {
+        if (!suggestionsBox) return;
+        if (query.length < 3) {
+            clearSuggestions();
+            return;
+        }
+        fetch('/api/address/suggest?q=' + encodeURIComponent(query))
+            .then(r => r.json())
+            .then(data => showSuggestions(Array.isArray(data) ? data : []))
+            .catch(() => clearSuggestions());
+    }
+
+    if (suggestionsBox) {
+        suggestionsBox.addEventListener('mousedown', function(e) {
+            const item = e.target.closest('.address-suggestions__item');
+            if (!item) return;
+            const address = item.dataset.address;
+            const lat = parseFloat(item.dataset.lat);
+            const lon = parseFloat(item.dataset.lon);
+            addrInput.value = address;
+            if (latField && !Number.isNaN(lat)) latField.value = lat;
+            if (lonField && !Number.isNaN(lon)) lonField.value = lon;
+            clearSuggestions();
+        });
+    }
+
+    document.addEventListener('click', function(e) {
+        if (!suggestionsBox) return;
+        if (!suggestionsBox.contains(e.target) && e.target !== addrInput) {
+            clearSuggestions();
+        }
+    });
+
+    addrInput.addEventListener('input', function() {
+        clearTimeout(suggestTimer);
+        if (latField) latField.value = '';
+        if (lonField) lonField.value = '';
+        statusDiv.textContent = '';
+        addressOk = false;
+        const value = addrInput.value.trim();
+        suggestTimer = setTimeout(() => fetchSuggestions(value), 300);
+    });
+
+    const checkBtn = document.getElementById('check-address-btn');
+    if (checkBtn) {
+        checkBtn.addEventListener('click', function() {
+            const value = addrInput.value.trim();
+            if (value.length < 5) {
+                statusDiv.textContent = 'Введіть адресу (мінімум 5 символів)';
+                statusDiv.style.color = 'var(--crimson, #e74c3c)';
+                return;
+            }
+            checkAddress(value, {
+                lat: latField && latField.value ? parseFloat(latField.value) : undefined,
+                lon: lonField && lonField.value ? parseFloat(lonField.value) : undefined
+            });
+        });
+    }
+})();
+</script>
+{% endblock %}

@@ -4,17 +4,16 @@
     <h2>Перевірка бронювань</h2>
     {% include '_admin_navigation.html' %}
     {% if all_reservations %}
-        <table class="orders-table">
+        <table>
             <thead>
             <tr>
                 <th>ID</th>
-                <th>Час</th>
-                <th>Тип столика</th>
+                <th>Столик</th>
+                <th>Місць</th>
+                <th>Початок</th>
+                <th>Кінець</th>
                 <th>Гість</th>
                 <th>Телефон</th>
-                <th>Email</th>
-                <th>Адреса</th>
-                <th>Коментар</th>
                 <th>Користувач</th>
                 <th>Дія</th>
             </tr>
@@ -23,19 +22,18 @@
             {% for res in all_reservations %}
                 <tr>
                     <td>{{ res.id }}</td>
-                    <td>{{ res.time_start }}</td>
-                    <td>{{ res.type_table }}</td>
+                    <td><strong style="color:var(--gold);">{{ res.table.label if res.table else '—' }}</strong></td>
+                    <td>{{ res.table.capacity if res.table else '—' }}</td>
+                    <td>{{ res.time_start.strftime('%d.%m.%Y %H:%M') }}</td>
+                    <td>{{ res.time_end.strftime('%H:%M') }}</td>
                     <td>{{ res.guest_name }}</td>
                     <td>{{ res.guest_phone }}</td>
-                    <td>{{ res.guest_email }}</td>
-                    <td>{{ res.guest_address or "—" }}</td>
-                    <td>{{ res.guest_notes or "—" }}</td>
                     <td>{{ res.user.nickname }}</td>
                     <td>
                         <form method="post">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                             <input type="hidden" name="reserv_id" value="{{ res.id }}">
-                            <button type="submit">Видалити</button>
+                            <button type="submit" class="btn-sm btn-danger">Видалити</button>
                         </form>
                     </td>
                 </tr>

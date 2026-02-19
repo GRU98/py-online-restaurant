@@ -1,23 +1,27 @@
 <nav class="primary-nav">
-    <ul class="nav-list">
-        <li><a href="/">Головна</a></li>
-        <li><a href="/menu">Меню</a></li>
+    <button class="nav-toggle" id="navToggle" aria-label="Меню"><i class="fa-solid fa-bars"></i></button>
+    <ul class="nav-list" id="navList">
+        <li><a href="/"><i class="fa-solid fa-house"></i> Головна</a></li>
+        <li><a href="/menu"><i class="fa-solid fa-book-open"></i> Меню</a></li>
+        <li><a href="/reviews"><i class="fa-solid fa-star"></i> Відгуки</a></li>
         {% if logged_user %}
-            <li><a href="/create_order">Кошик</a></li>
-            <li><a href="/my_orders">Мої замовлення</a></li>
-            <li><a href="/my_reservations">Мої бронювання</a></li>
-            <li><a href="/reserved">Бронювання</a></li>
-            <li><a href="/logout">Вихід</a></li>
+            {% if not is_admin %}
+                <li><a href="/profile"><i class="fa-solid fa-user-circle"></i> Профіль</a></li>
+                <li><a href="/create_order"><i class="fa-solid fa-shopping-cart"></i> Кошик</a></li>
+                <li><a href="/reserved"><i class="fa-solid fa-calendar-plus"></i> Бронювання</a></li>
+            {% endif %}
         {% else %}
-            <li><a href="/login">Вхід</a></li>
-            <li><a href="/register">Реєстрація</a></li>
+            <li><a href="/login"><i class="fa-solid fa-sign-in-alt"></i> Вхід</a></li>
+            <li><a href="/register"><i class="fa-solid fa-user-plus"></i> Реєстрація</a></li>
         {% endif %}
         {% if is_admin %}
-            <li><a href="/add_position">Додати позицію</a></li>
-            <li><a href="/menu_check">Перевірити меню</a></li>
-            <li><a href="/orders_check">Замовлення</a></li>
-            <li><a href="/reservations_check">Бронювання</a></li>
-            <li><a href="/all_users">Користувачі</a></li>
+            <li><a href="/add_position"><i class="fa-solid fa-plus-square"></i> Додати позицію</a></li>
+            <li><a href="/menu_check"><i class="fa-solid fa-tasks"></i> Перевірити меню</a></li>
+            <li><a href="/orders_check"><i class="fa-solid fa-box"></i> Замовлення</a></li>
+            <li><a href="/reservations_check"><i class="fa-solid fa-calendar-alt"></i> Бронювання</a></li>
+            <li><a href="/all_users"><i class="fa-solid fa-users"></i> Користувачі</a></li>
+            <li><a href="/reviews"><i class="fa-solid fa-star"></i> Відгуки</a></li>
+            <li><form action="/logout" method="POST" style="display:inline;margin:0;padding:0;"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="nav-logout-btn"><i class="fa-solid fa-sign-out-alt"></i> Вихід</button></form></li>
         {% endif %}
     </ul>
 </nav>

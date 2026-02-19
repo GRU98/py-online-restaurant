@@ -1,0 +1,500 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero-banner hero-bg" style="padding:2.5rem 2rem;">
+    <img class="hero-bg-img" src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1920&q=85" alt="" loading="eager">
+    <h2 class="shimmer-text">Мій профіль</h2>
+    <p>{{ user.nickname }} &mdash; {{ user.email }}</p>
+</section>
+
+<!-- Quick links + balance -->
+<section class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));margin-bottom:0;">
+    <a href="/my_orders" class="card animate-in" style="animation-delay:0.05s;text-decoration:none;text-align:center;">
+        <i class="fa-solid fa-receipt" style="font-size:1.8rem;color:var(--gold);margin-bottom:0.5rem;display:block;"></i>
+        <h3 style="margin-bottom:0.3rem;">Мої замовлення</h3>
+        <p style="margin:0;font-size:0.85rem;">{{ orders|length }} замовлень</p>
+    </a>
+    <a href="/my_reservations" class="card animate-in" style="animation-delay:0.1s;text-decoration:none;text-align:center;">
+        <i class="fa-solid fa-calendar-check" style="font-size:1.8rem;color:var(--gold);margin-bottom:0.5rem;display:block;"></i>
+        <h3 style="margin-bottom:0.3rem;">Мої бронювання</h3>
+        <p style="margin:0;font-size:0.85rem;">{{ reservations|length }} бронювань</p>
+    </a>
+    <article class="card animate-in" style="animation-delay:0.15s;text-align:center;">
+        <i class="fa-solid fa-wallet" style="font-size:1.8rem;color:{% if user.balance < 0 %}var(--crimson){% else %}var(--gold){% endif %};margin-bottom:0.5rem;display:block;"></i>
+        <h3 style="margin-bottom:0.3rem;">Баланс</h3>
+        <p style="margin:0;font-size:1.1rem;font-weight:700;color:{% if user.balance < 0 %}var(--crimson){% elif user.balance > 0 %}var(--success){% else %}var(--text-secondary){% endif %};">
+            {{ user.balance|round(0)|int }} грн
+        </p>
+        {% if user.balance < 0 %}
+        <p style="margin:0.3rem 0 0;font-size:0.78rem;color:var(--crimson);">Заборгованість</p>
+        {% endif %}
+    </article>
+</section>
+
+<section class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+    <article class="card animate-in" style="animation-delay:0.2s;">
+        <h3><i class="fa-solid fa-bell"></i> Розсилка</h3>
+        <p>Отримуйте сповіщення про знижки та акції на пошту.</p>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-top:1rem;">
+            <input type="checkbox" id="newsletterToggle" {% if user.newsletter_opt_in %}checked{% endif %}
+                   style="width:20px;height:20px;accent-color:var(--gold);">
+            <span>Отримувати розсилку</span>
+        </label>
+    </article>
+
+    <article class="card animate-in" style="animation-delay:0.225s;">
+        <h3><i class="fa-solid fa-birthday-cake"></i> День народження</h3>
+        {% if user.date_of_birth %}
+        <p>Ваша дата народження: <strong style="color:var(--gold);">{{ user.date_of_birth.strftime('%d.%m.%Y') }}</strong></p>
+        <p style="font-size:0.85rem;color:var(--text-secondary);margin-top:0.5rem;">
+            <i class="fa-solid fa-gift" style="color:var(--gold);"></i> 
+            У день народження ви отримаєте знижку 10% та привітальний лист!
+        </p>
+        {% else %}
+        <p>Вкажіть дату народження, щоб отримувати знижку 10% у день народження.</p>
+        <input id="birthdayInput" type="date" max="{{ today }}" style="margin-top:1rem;margin-bottom:0.5rem;color:var(--gold);font-weight:600;">
+        <button id="saveBirthdayBtn" class="btn" type="button">Зберегти дату народження</button>
+        <div id="birthdayMsg" style="margin-top:0.5rem;font-size:0.85rem;"></div>
+        <p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.8rem;">
+            <i class="fa-solid fa-info-circle"></i> Дату народження можна встановити лише один раз і не можна змінити.
+        </p>
+        {% endif %}
+    </article>
+
+    <article class="card animate-in" style="animation-delay:0.25s;">
+        <h3><i class="fa-solid fa-key"></i> Зміна пароля</h3>
+        <div id="pwStep1">
+            <p>Для зміни пароля ми надішлемо 6-значний код на вашу пошту.</p>
+            <button id="requestCodeBtn" class="btn" type="button">Надіслати код</button>
+        </div>
+        <div id="pwStep2" style="display:none;">
+            <p>Введіть 6-значний код з пошти та новий пароль:</p>
+            <input id="pwCode" type="text" maxlength="6" placeholder="6-значний код" style="margin-bottom:0.5rem;color:var(--gold);font-weight:600;font-size:1.1rem;letter-spacing:4px;">
+            <input id="pwNew" type="password" minlength="8" placeholder="Новий пароль (мін. 8 символів)" style="margin-bottom:0.5rem;color:var(--text);">
+            <button id="changePassBtn" class="btn" type="button">Змінити пароль</button>
+        </div>
+        <div id="pwMsg" style="margin-top:0.5rem;font-size:0.85rem;"></div>
+    </article>
+
+    <article class="card animate-in" style="animation-delay:0.3s;">
+        <h3><i class="fa-solid fa-sign-out-alt"></i> Вихід</h3>
+        <p>Завершити поточну сесію та вийти з акаунту.</p>
+        <button id="logoutBtn" class="btn" type="button" style="margin-top:1rem;background:var(--gradient-wine);color:var(--text);">
+            <i class="fa-solid fa-sign-out-alt"></i> Вийти з акаунту
+        </button>
+    </article>
+</section>
+
+<!-- Logout confirmation modal -->
+<div id="logoutBackdrop" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.7);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    display:none;align-items:center;justify-content:center;">
+    <div style="background:var(--bg-card);border:1px solid rgba(198,167,94,0.12);border-radius:var(--radius);
+        padding:2.5rem 2rem;max-width:400px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+        <i class="fa-solid fa-right-from-bracket" style="font-size:2.5rem;color:var(--gold);margin-bottom:1rem;display:block;"></i>
+        <h3 style="color:var(--text);margin-bottom:0.5rem;">Ви дійсно хочете вийти?</h3>
+        <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem;">Вам потрібно буде увійти знову, щоб отримати доступ до акаунту.</p>
+        <div style="display:flex;gap:12px;justify-content:center;">
+            <form action="/logout" method="POST" style="margin:0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button type="submit" class="btn" style="background:var(--gradient-wine);color:var(--text);padding:10px 28px;">
+                    <i class="fa-solid fa-check"></i> Так, вийти
+                </button>
+            </form>
+            <button id="logoutCancel" type="button" class="btn btn-outline" style="padding:10px 28px;">Скасувати</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── My Review ── -->
+<section class="animate-in" style="animation-delay:0.33s;">
+    <h3 style="color:var(--gold);"><i class="fa-solid fa-star"></i> Мій відгук</h3>
+    <div id="myReviewSection" class="card" style="max-width:640px;">
+        {% if my_review %}
+        <div id="reviewDisplay">
+            <div class="review-stars" id="displayStars">
+                {% for i in range(my_review.stars) %}<i class="fa-solid fa-star" style="color:#f5c542;"></i>{% endfor %}
+                {% for i in range(5 - my_review.stars) %}<i class="fa-regular fa-star" style="color:#f5c542;"></i>{% endfor %}
+            </div>
+            <p id="displayText" style="margin:0.8rem 0;">{{ my_review.text }}</p>
+            <p style="font-size:0.78rem;color:var(--text-muted);margin:0 0 1rem;">{{ my_review.created_at.strftime('%d.%m.%Y') }}</p>
+            <div style="display:flex;gap:8px;">
+                <button type="button" class="btn btn-sm" id="editReviewBtn"><i class="fa-solid fa-pen"></i> Редагувати</button>
+                <button type="button" class="btn-sm btn-danger" id="deleteReviewBtn"><i class="fa-solid fa-trash"></i> Видалити</button>
+            </div>
+        </div>
+        <div id="reviewEditForm" style="display:none;">
+            <div class="star-rating" id="editStarRating">
+                {% for i in range(1, 6) %}
+                <span data-star="{{ i }}" style="cursor:pointer;font-size:1.5rem;">
+                    <i class="{% if i <= my_review.stars %}fa-solid{% else %}fa-regular{% endif %} fa-star" style="color:#f5c542;"></i>
+                </span>
+                {% endfor %}
+            </div>
+            <textarea id="editReviewText" rows="4" maxlength="2000" style="margin-top:0.8rem;width:100%;">{{ my_review.text }}</textarea>
+            <div style="display:flex;gap:8px;margin-top:0.8rem;">
+                <button type="button" class="btn btn-sm" id="saveReviewBtn"><i class="fa-solid fa-check"></i> Зберегти</button>
+                <button type="button" class="btn btn-sm btn-outline" id="cancelEditBtn">Скасувати</button>
+            </div>
+            <div id="editReviewMsg" style="margin-top:0.5rem;font-size:0.85rem;"></div>
+        </div>
+        {% else %}
+        <div id="reviewCreateForm">
+            <p style="color:var(--text-secondary);margin:0 0 1rem;">Залиште свій відгук про наш ресторан!</p>
+            <div class="star-rating" id="newStarRating">
+                {% for i in range(1, 6) %}
+                <span data-star="{{ i }}" style="cursor:pointer;font-size:1.5rem;">
+                    <i class="fa-regular fa-star" style="color:#f5c542;"></i>
+                </span>
+                {% endfor %}
+            </div>
+            <textarea id="newReviewText" rows="4" maxlength="2000" placeholder="Напишіть ваш відгук..." style="margin-top:0.8rem;width:100%;"></textarea>
+            <button type="button" class="btn btn-sm" id="submitNewReviewBtn" style="margin-top:0.8rem;">
+                <i class="fa-solid fa-paper-plane"></i> Надіслати відгук
+            </button>
+            <div id="newReviewMsg" style="margin-top:0.5rem;font-size:0.85rem;"></div>
+        </div>
+        <div id="reviewCreated" style="display:none;"></div>
+        {% endif %}
+    </div>
+</section>
+
+<section class="animate-in" style="animation-delay:0.35s;">
+    <h3 style="color:var(--gold);"><i class="fa-solid fa-receipt"></i> Історія замовлень</h3>
+    {% if orders %}
+    <table class="menu-table">
+        <thead>
+        <tr><th>#</th><th>Рахунок</th><th>Дата</th><th>Сума</th><th>Деталі</th></tr>
+        </thead>
+        <tbody>
+        {% for order in orders %}
+        <tr>
+            <td>{{ order.id }}</td>
+            <td>
+                {% if order.invoice_number %}
+                <a href="/invoice/{{ order.id }}" target="_blank" style="color:var(--gold);font-size:0.82rem;">
+                    <i class="fa-solid fa-file-invoice"></i> {{ order.invoice_number }}
+                </a>
+                {% else %}—{% endif %}
+            </td>
+            <td>{{ order.order_time.strftime('%d.%m.%Y %H:%M') }}</td>
+            <td style="color:var(--gold);font-weight:700;">{{ order.total_cost|round(0)|int }} грн</td>
+            <td><a href="/my_order/{{ order.id }}" class="btn btn-sm">Переглянути</a></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color:var(--text-muted);">Замовлень поки немає. <a href="/menu">Переглянути меню</a></p>
+    {% endif %}
+</section>
+
+<section class="animate-in" style="animation-delay:0.4s;">
+    <h3 style="color:var(--gold);"><i class="fa-solid fa-calendar-check"></i> Мої бронювання</h3>
+    {% if reservations %}
+    <table class="menu-table">
+        <thead>
+        <tr><th>Дата</th><th>Столик</th><th>Час</th><th>Передоплата</th><th>Статус</th><th>Дії</th></tr>
+        </thead>
+        <tbody>
+        {% for res in reservations %}
+        <tr>
+            <td>{{ res.time_start.strftime('%d.%m.%Y') }}</td>
+            <td>{{ res.table.label if res.table else '—' }} ({{ res.table.capacity if res.table else '?' }} ос.)</td>
+            <td>{{ res.time_start.strftime('%H:%M') }} – {{ res.time_end.strftime('%H:%M') }}</td>
+            <td style="color:var(--gold);font-weight:600;">{{ res.prepaid|round(0)|int }} грн</td>
+            <td>
+                {% if res.cancelled %}
+                    <span style="color:var(--crimson);font-weight:600;">Скасовано</span>
+                {% else %}
+                    <span style="color:var(--success);font-weight:600;">Активне</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if not res.cancelled %}
+                <button type="button" class="btn-sm btn-danger cancel-res-btn" data-id="{{ res.id }}"
+                        data-date="{{ res.time_start.strftime('%Y-%m-%d') }}"
+                        data-label="{{ res.table.label if res.table else '?' }}">
+                    <i class="fa-solid fa-xmark"></i> Скасувати
+                </button>
+                {% else %}—{% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color:var(--text-muted);">Бронювань поки немає. <a href="/reserved">Забронювати столик</a></p>
+    {% endif %}
+</section>
+
+<!-- Cancel reservation confirmation modal -->
+<div id="cancelResBackdrop" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.7);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+    <div style="background:var(--bg-card);border:1px solid rgba(198,167,94,0.12);border-radius:var(--radius);
+        padding:2.5rem 2rem;max-width:440px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+        <i class="fa-solid fa-triangle-exclamation" style="font-size:2.5rem;color:var(--warning);margin-bottom:1rem;display:block;"></i>
+        <h3 style="color:var(--text);margin-bottom:0.5rem;">Скасувати бронювання?</h3>
+        <p id="cancelResMsg" style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem;"></p>
+        <div style="display:flex;gap:12px;justify-content:center;">
+            <button id="cancelResConfirm" type="button" class="btn" style="background:var(--gradient-wine);color:var(--text);padding:10px 28px;">
+                <i class="fa-solid fa-xmark"></i> Так, скасувати
+            </button>
+            <button id="cancelResCancel" type="button" class="btn btn-outline" style="padding:10px 28px;">Ні</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const csrf = "{{ csrf_token }}";
+    const hdrs = {'Content-Type':'application/json','X-CSRF-Token':csrf};
+
+    /* ── Logout confirmation ── */
+    var logoutBackdrop = document.getElementById('logoutBackdrop');
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+        logoutBackdrop.style.display = 'flex';
+    });
+    document.getElementById('logoutCancel').addEventListener('click', function() {
+        logoutBackdrop.style.display = 'none';
+    });
+    logoutBackdrop.addEventListener('click', function(e) {
+        if (e.target === logoutBackdrop) logoutBackdrop.style.display = 'none';
+    });
+
+    /* ── Newsletter toggle ── */
+    document.getElementById('newsletterToggle').addEventListener('change', function() {
+        fetch('/api/profile/toggle-newsletter', {method:'POST', headers:hdrs, credentials:'same-origin'})
+        .then(r=>r.json()).catch(()=>{});
+    });
+
+    /* ── Birthday save ── */
+    var saveBirthdayBtn = document.getElementById('saveBirthdayBtn');
+    if (saveBirthdayBtn) {
+        saveBirthdayBtn.addEventListener('click', function() {
+            var birthdayInput = document.getElementById('birthdayInput');
+            var birthdayMsg = document.getElementById('birthdayMsg');
+            var dateValue = birthdayInput.value.trim();
+            
+            if (!dateValue) {
+                birthdayMsg.textContent = 'Оберіть дату народження';
+                birthdayMsg.style.color = 'var(--crimson)';
+                return;
+            }
+            
+            this.disabled = true;
+            this.textContent = 'Збереження...';
+            
+            fetch('/api/profile/set-birthday', {
+                method: 'POST',
+                headers: hdrs,
+                credentials: 'same-origin',
+                body: JSON.stringify({date_of_birth: dateValue})
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.ok) {
+                    birthdayMsg.textContent = 'Дату народження збережено!';
+                    birthdayMsg.style.color = '#34d399';
+                    setTimeout(function() { window.location.reload(); }, 1500);
+                } else {
+                    birthdayMsg.textContent = d.error || 'Помилка';
+                    birthdayMsg.style.color = 'var(--crimson)';
+                    saveBirthdayBtn.disabled = false;
+                    saveBirthdayBtn.textContent = 'Зберегти дату народження';
+                }
+            })
+            .catch(() => {
+                birthdayMsg.textContent = 'Помилка мережі';
+                birthdayMsg.style.color = 'var(--crimson)';
+                saveBirthdayBtn.disabled = false;
+                saveBirthdayBtn.textContent = 'Зберегти дату народження';
+            });
+        });
+    }
+
+    /* ── Password change ── */
+    document.getElementById('requestCodeBtn').addEventListener('click', function() {
+        this.disabled = true; this.textContent = 'Надсилання...';
+        fetch('/api/profile/request-password-code', {method:'POST', headers:hdrs, credentials:'same-origin'})
+        .then(r=>r.json())
+        .then(d => {
+            if (d.ok) {
+                document.getElementById('pwStep1').style.display = 'none';
+                document.getElementById('pwStep2').style.display = '';
+            }
+        }).catch(()=>{ this.disabled = false; this.textContent = 'Надіслати код'; });
+    });
+
+    document.getElementById('changePassBtn').addEventListener('click', function() {
+        const code = document.getElementById('pwCode').value.trim();
+        const pw = document.getElementById('pwNew').value;
+        const msg = document.getElementById('pwMsg');
+        if (code.length !== 6) { msg.textContent = 'Введіть 6-значний код'; msg.style.color = 'var(--crimson)'; return; }
+        if (pw.length < 8) { msg.textContent = 'Мінімум 8 символів'; msg.style.color = 'var(--crimson)'; return; }
+        this.disabled = true; this.textContent = '...';
+        fetch('/api/profile/change-password', {
+            method:'POST', headers:hdrs, credentials:'same-origin',
+            body: JSON.stringify({code:code, new_password:pw})
+        })
+        .then(r=>r.json())
+        .then(d => {
+            if (d.ok) { msg.textContent = 'Пароль змінено!'; msg.style.color = '#34d399'; }
+            else { msg.textContent = d.error || 'Помилка'; msg.style.color = 'var(--crimson)'; this.disabled = false; this.textContent = 'Змінити пароль'; }
+        }).catch(()=>{ msg.textContent = 'Помилка'; msg.style.color = 'var(--crimson)'; this.disabled = false; this.textContent = 'Змінити пароль'; });
+    });
+
+    /* ── Reservation cancellation ── */
+    var cancelBackdrop = document.getElementById('cancelResBackdrop');
+    var cancelMsg = document.getElementById('cancelResMsg');
+    var cancelConfirmBtn = document.getElementById('cancelResConfirm');
+    var cancelCancelBtn = document.getElementById('cancelResCancel');
+    var pendingResId = null;
+
+    document.querySelectorAll('.cancel-res-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            pendingResId = parseInt(this.dataset.id);
+            var resDate = this.dataset.date;
+            var label = this.dataset.label;
+            var now = new Date();
+            var bookDate = new Date(resDate + 'T00:00:00');
+            var diffMs = bookDate.getTime() - now.getTime();
+            var diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+            if (diffDays >= 1) {
+                cancelMsg.innerHTML = 'Столик <strong style="color:var(--gold);">' + label + '</strong> на <strong>' + resDate + '</strong>.<br>Передоплата 500 грн буде повернена.';
+            } else {
+                cancelMsg.innerHTML = 'Столик <strong style="color:var(--gold);">' + label + '</strong> на <strong>' + resDate + '</strong>.<br><span style="color:var(--crimson);font-weight:600;">Увага!</span> До бронювання менше 24 годин — передоплата 500 грн <strong>не повертається</strong>, баланс буде зменшено на 500 грн.';
+            }
+            cancelBackdrop.style.display = 'flex';
+        });
+    });
+
+    cancelCancelBtn.addEventListener('click', function() {
+        cancelBackdrop.style.display = 'none';
+        pendingResId = null;
+    });
+    cancelBackdrop.addEventListener('click', function(e) {
+        if (e.target === cancelBackdrop) { cancelBackdrop.style.display = 'none'; pendingResId = null; }
+    });
+
+    cancelConfirmBtn.addEventListener('click', function() {
+        if (!pendingResId) return;
+        cancelConfirmBtn.disabled = true;
+        cancelConfirmBtn.textContent = 'Скасування...';
+        fetch('/api/reservations/' + pendingResId + '/cancel', {
+            method: 'POST',
+            headers: hdrs,
+            credentials: 'same-origin'
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.ok) {
+                window.location.reload();
+            } else {
+                alert(d.error || 'Помилка');
+                cancelConfirmBtn.disabled = false;
+                cancelConfirmBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> Так, скасувати';
+            }
+        })
+        .catch(function() {
+            alert('Помилка мережі');
+            cancelConfirmBtn.disabled = false;
+            cancelConfirmBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> Так, скасувати';
+        });
+    });
+
+    /* ── Star rating helper ── */
+    function initStarRating(containerId, initialStars) {
+        var container = document.getElementById(containerId);
+        if (!container) return {get: function(){return 0;}};
+        var current = initialStars || 0;
+        var spans = container.querySelectorAll('span[data-star]');
+        function render(val) {
+            spans.forEach(function(s) {
+                var star = parseInt(s.dataset.star);
+                var icon = s.querySelector('i');
+                if (star <= val) { icon.className = 'fa-solid fa-star'; }
+                else { icon.className = 'fa-regular fa-star'; }
+            });
+        }
+        spans.forEach(function(s) {
+            s.addEventListener('click', function() {
+                current = parseInt(this.dataset.star);
+                render(current);
+            });
+            s.addEventListener('mouseenter', function() { render(parseInt(this.dataset.star)); });
+        });
+        container.addEventListener('mouseleave', function() { render(current); });
+        render(current);
+        return {get: function(){return current;}};
+    }
+
+    /* ── Review: existing review (edit / delete) ── */
+    {% if my_review %}
+    var reviewId = {{ my_review.id }};
+    var editRating = initStarRating('editStarRating', {{ my_review.stars }});
+
+    document.getElementById('editReviewBtn').addEventListener('click', function() {
+        document.getElementById('reviewDisplay').style.display = 'none';
+        document.getElementById('reviewEditForm').style.display = '';
+    });
+    document.getElementById('cancelEditBtn').addEventListener('click', function() {
+        document.getElementById('reviewEditForm').style.display = 'none';
+        document.getElementById('reviewDisplay').style.display = '';
+    });
+
+    document.getElementById('saveReviewBtn').addEventListener('click', function() {
+        var text = document.getElementById('editReviewText').value.trim();
+        var stars = editRating.get();
+        var msg = document.getElementById('editReviewMsg');
+        if (!text) { msg.textContent = 'Напишіть текст відгуку'; msg.style.color = 'var(--crimson)'; return; }
+        if (stars < 1) { msg.textContent = 'Оберіть оцінку'; msg.style.color = 'var(--crimson)'; return; }
+        this.disabled = true;
+        fetch('/api/reviews/' + reviewId, {
+            method: 'PUT', headers: hdrs, credentials: 'same-origin',
+            body: JSON.stringify({text: text, stars: stars})
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.id) { window.location.reload(); }
+            else { msg.textContent = d.error || 'Помилка'; msg.style.color = 'var(--crimson)'; }
+        })
+        .catch(function() { msg.textContent = 'Помилка мережі'; msg.style.color = 'var(--crimson)'; })
+        .finally(function() { document.getElementById('saveReviewBtn').disabled = false; });
+    });
+
+    document.getElementById('deleteReviewBtn').addEventListener('click', function() {
+        if (!confirm('Видалити ваш відгук?')) return;
+        fetch('/api/reviews/' + reviewId, {
+            method: 'DELETE', headers: hdrs, credentials: 'same-origin'
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) { if (d.ok) window.location.reload(); })
+        .catch(function() { alert('Помилка мережі'); });
+    });
+    {% else %}
+    /* ── Review: create new ── */
+    var newRating = initStarRating('newStarRating', 0);
+
+    document.getElementById('submitNewReviewBtn').addEventListener('click', function() {
+        var text = document.getElementById('newReviewText').value.trim();
+        var stars = newRating.get();
+        var msg = document.getElementById('newReviewMsg');
+        if (!text) { msg.textContent = 'Напишіть текст відгуку'; msg.style.color = 'var(--crimson)'; return; }
+        if (stars < 1) { msg.textContent = 'Оберіть оцінку'; msg.style.color = 'var(--crimson)'; return; }
+        this.disabled = true;
+        fetch('/api/reviews', {
+            method: 'POST', headers: hdrs, credentials: 'same-origin',
+            body: JSON.stringify({text: text, stars: stars})
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.id) { window.location.reload(); }
+            else { msg.textContent = d.error || 'Помилка'; msg.style.color = 'var(--crimson)'; document.getElementById('submitNewReviewBtn').disabled = false; }
+        })
+        .catch(function() { msg.textContent = 'Помилка мережі'; msg.style.color = 'var(--crimson)'; document.getElementById('submitNewReviewBtn').disabled = false; });
+    });
+    {% endif %}
+})();
+</script>
+{% endblock %}

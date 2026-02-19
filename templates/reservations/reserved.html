@@ -1,0 +1,480 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+    <h2 style="margin-bottom:0.5rem;"><i class="fa-solid fa-calendar-check" style="color:var(--gold);"></i> Бронювання столика</h2>
+    <p style="color:var(--text-secondary);margin-bottom:2rem;">Оберіть дату, час та столик на схемі ресторану. Максимальний час — <strong style="color:var(--gold);">{{ duration_hours }} годин</strong>.</p>
+
+    <div id="reservationAlert" style="display:none;padding:14px 20px;border-radius:12px;margin-bottom:1.5rem;font-size:0.9rem;"></div>
+
+    <!-- STEP 1: Date & Time -->
+    <div id="step1" class="reservation-step">
+        <h3 style="margin-bottom:1rem;"><span style="background:var(--gold);color:var(--bg-deep);width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;margin-right:8px;">1</span> Оберіть дату та час</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;max-width:500px;">
+            <div>
+                <label for="resDate" style="display:block;margin-bottom:6px;font-size:0.85rem;color:var(--text-secondary);">Дата</label>
+                <input id="resDate" type="date" style="width:100%;">
+            </div>
+            <div>
+                <label for="resTime" style="display:block;margin-bottom:6px;font-size:0.85rem;color:var(--text-secondary);">Час</label>
+                <input id="resTime" type="time" style="width:100%;">
+            </div>
+        </div>
+        <button id="btnShowPlan" class="btn" style="margin-top:1.2rem;" disabled>Показати схему залу</button>
+    </div>
+
+    <!-- STEP 2: Floor Plan -->
+    <div id="step2" class="reservation-step" style="display:none;">
+        <h3 style="margin-bottom:1rem;"><span style="background:var(--gold);color:var(--bg-deep);width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;margin-right:8px;">2</span> Оберіть столик</h3>
+        <p style="color:var(--text-secondary);font-size:0.85rem;margin-bottom:0.5rem;">
+            <span id="selectedDateTime" style="color:var(--gold);font-weight:600;"></span> — бронь на {{ duration_hours }} год.
+        </p>
+
+        <!-- Legend -->
+        <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:1.2rem;font-size:0.82rem;padding:10px 16px;background:rgba(255,255,255,0.02);border-radius:10px;border:1px solid rgba(255,255,255,0.04);">
+            <span style="display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:16px;height:16px;border-radius:5px;background:linear-gradient(135deg,#1F4A2E,#163822);border:1.5px solid #2E7D46;"></span> Вільний</span>
+            <span style="display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:16px;height:16px;border-radius:5px;background:linear-gradient(135deg,#5A1A28,#3D1018);border:1.5px solid #6B2030;"></span> Зайнятий</span>
+            <span style="display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:16px;height:16px;border-radius:5px;background:linear-gradient(135deg,#D4BA7A,#B89B55);border:1.5px solid #E8D48A;box-shadow:0 0 6px rgba(198,167,94,0.4);"></span> Обраний</span>
+            <span style="display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:16px;height:16px;border-radius:5px;background:#252530;border:1.5px solid #3A3A48;"></span> Бар</span>
+            <span style="display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:16px;height:4px;border-radius:2px;background:rgba(46,125,70,0.3);border:1px dashed rgba(46,125,70,0.4);"></span> Диванчик</span>
+        </div>
+
+        <!-- Floor Plan Container -->
+        <div id="floorPlanWrap" style="position:relative;width:100%;max-width:960px;margin-bottom:1.5rem;">
+            <div id="floorPlan" style="position:relative;width:100%;aspect-ratio:4/3;background:linear-gradient(135deg,#0E0E16 0%,#141420 50%,#0E0E16 100%);border-radius:18px;border:1px solid rgba(198,167,94,0.15);overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+                <!-- SVG floor plan rendered by JS -->
+            </div>
+            <!-- Floating tooltip -->
+            <div id="floorTooltip" style="display:none;position:absolute;pointer-events:none;background:rgba(20,20,30,0.95);border:1px solid rgba(198,167,94,0.4);border-radius:10px;padding:10px 14px;font-size:0.82rem;color:#eee;box-shadow:0 6px 20px rgba(0,0,0,0.5);z-index:10;backdrop-filter:blur(8px);min-width:130px;">
+                <div id="ttLabel" style="color:var(--gold);font-weight:700;font-size:0.95rem;margin-bottom:3px;"></div>
+                <div id="ttInfo" style="color:var(--text-secondary);"></div>
+            </div>
+        </div>
+
+        <!-- Selected table info -->
+        <div id="tableInfo" style="display:none;padding:18px 24px;background:linear-gradient(135deg,rgba(198,167,94,0.06),rgba(198,167,94,0.02));border-radius:14px;border:1px solid rgba(198,167,94,0.2);margin-bottom:1.5rem;">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <div style="width:42px;height:42px;border-radius:10px;background:rgba(198,167,94,0.12);display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🪑</div>
+                <div>
+                    <p style="margin:0;font-size:1rem;font-weight:600;">Столик <strong id="infoLabel" style="color:var(--gold);"></strong></p>
+                    <p style="margin:2px 0 0;font-size:0.85rem;color:var(--text-secondary);"><span id="infoCapacity"></span> місць <span id="infoSofa" style="color:var(--gold);"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:12px;">
+            <button id="btnBack1" class="btn btn-outline" type="button">← Назад</button>
+            <button id="btnNext3" class="btn" type="button" disabled>Далі →</button>
+        </div>
+    </div>
+
+    <!-- STEP 3: Contact & Confirm -->
+    <div id="step3" class="reservation-step" style="display:none;">
+        <h3 style="margin-bottom:1rem;"><span style="background:var(--gold);color:var(--bg-deep);width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:700;margin-right:8px;">3</span> Підтвердження</h3>
+        <div style="background:var(--bg-elevated);border-radius:12px;padding:20px;border:1px solid rgba(198,167,94,0.12);margin-bottom:1.5rem;">
+            <p style="margin:0 0 8px;color:var(--text-secondary);font-size:0.85rem;">Ваше бронювання:</p>
+            <p style="margin:0 0 4px;"><strong style="color:var(--gold);" id="confirmTable"></strong></p>
+            <p style="margin:0 0 4px;" id="confirmTime"></p>
+            <p style="margin:0;color:var(--text-muted);font-size:0.85rem;" id="confirmDuration"></p>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;max-width:500px;margin-bottom:1.5rem;">
+            <div>
+                <label for="guestName" style="display:block;margin-bottom:6px;font-size:0.85rem;color:var(--text-secondary);">Ваше ім'я</label>
+                <input id="guestName" type="text" value="{{ logged_user.nickname }}" style="width:100%;">
+            </div>
+            <div>
+                <label for="guestPhone" style="display:block;margin-bottom:6px;font-size:0.85rem;color:var(--text-secondary);">Телефон</label>
+                <input id="guestPhone" type="tel" placeholder="+380..." style="width:100%;">
+            </div>
+        </div>
+        <div style="background:rgba(198,167,94,0.06);border:1px solid rgba(198,167,94,0.15);border-radius:12px;padding:14px 20px;margin-bottom:1.5rem;">
+            <p style="margin:0;font-size:0.9rem;color:var(--text-secondary);">
+                <i class="fa-solid fa-wallet" style="color:var(--gold);margin-right:6px;"></i>
+                Передоплата за бронювання: <strong style="color:var(--gold);">500 грн</strong>
+            </p>
+            <p style="margin:4px 0 0;font-size:0.8rem;color:var(--text-muted);">
+                Безкоштовне скасування за 24+ години до бронювання. При пізньому скасуванні передоплата не повертається.
+            </p>
+        </div>
+        <div style="display:flex;gap:12px;">
+            <button id="btnBack2" class="btn btn-outline" type="button">← Назад</button>
+            <button id="btnConfirm" class="btn" type="button"><i class="fa-solid fa-check"></i> Забронювати (500 грн)</button>
+        </div>
+    </div>
+
+    <!-- Success -->
+    <div id="stepDone" class="reservation-step" style="display:none;text-align:center;padding:3rem 1rem;">
+        <i class="fa-solid fa-circle-check" style="font-size:3rem;color:var(--success);margin-bottom:1rem;display:block;"></i>
+        <h3 style="color:var(--gold);margin-bottom:0.5rem;">Бронювання підтверджено!</h3>
+        <p id="doneDetails" style="color:var(--text-secondary);"></p>
+        <p style="color:var(--gold);font-weight:600;margin-top:0.5rem;">Передоплата: 500 грн</p>
+        <a href="/profile" class="btn" style="margin-top:1.5rem;">Мій профіль</a>
+    </div>
+</section>
+
+<script>
+(function(){
+    const token = window.__JWT_TOKEN__ || '';
+    const csrf = '{{ csrf_token }}';
+    const DURATION = {{ duration_hours }};
+
+    const dateInput = document.getElementById('resDate');
+    const timeInput = document.getElementById('resTime');
+    const btnShow = document.getElementById('btnShowPlan');
+    const btnNext3 = document.getElementById('btnNext3');
+    const btnBack1 = document.getElementById('btnBack1');
+    const btnBack2 = document.getElementById('btnBack2');
+    const btnConfirm = document.getElementById('btnConfirm');
+    const alertDiv = document.getElementById('reservationAlert');
+
+    const step1 = document.getElementById('step1');
+    const step2 = document.getElementById('step2');
+    const step3 = document.getElementById('step3');
+    const stepDone = document.getElementById('stepDone');
+
+    let allTables = [];
+    let bookedIds = new Set();
+    let selectedTableId = null;
+    let selectedTable = null;
+
+    // Set min date to today
+    const today = new Date();
+    dateInput.min = today.toISOString().split('T')[0];
+    dateInput.value = today.toISOString().split('T')[0];
+
+    function checkStep1() {
+        btnShow.disabled = !(dateInput.value && timeInput.value);
+    }
+    dateInput.addEventListener('change', checkStep1);
+    timeInput.addEventListener('change', checkStep1);
+
+    function showAlert(msg, type) {
+        alertDiv.textContent = msg;
+        alertDiv.style.display = 'block';
+        alertDiv.style.background = type === 'success' ? 'rgba(90,158,111,0.15)' : 'rgba(192,57,43,0.15)';
+        alertDiv.style.color = type === 'success' ? 'var(--success)' : 'var(--danger)';
+        alertDiv.style.border = '1px solid ' + (type === 'success' ? 'rgba(90,158,111,0.3)' : 'rgba(192,57,43,0.3)');
+    }
+    function hideAlert() { alertDiv.style.display = 'none'; }
+
+    function goStep(n) {
+        [step1, step2, step3, stepDone].forEach(s => s.style.display = 'none');
+        [step1, step2, step3, stepDone][n - 1].style.display = '';
+        hideAlert();
+    }
+
+    // STEP 1 -> 2
+    btnShow.addEventListener('click', async () => {
+        btnShow.disabled = true;
+        btnShow.textContent = 'Завантаження...';
+        try {
+            // Load tables
+            if (allTables.length === 0) {
+                const r = await fetch('/api/tables');
+                allTables = await r.json();
+            }
+            // Load availability
+            const r2 = await fetch(`/api/tables/availability?date=${dateInput.value}&time=${timeInput.value}`);
+            if (!r2.ok) throw new Error('Помилка завантаження');
+            const data = await r2.json();
+            bookedIds = new Set(data.bookedTableIds);
+            selectedTableId = null;
+            selectedTable = null;
+            btnNext3.disabled = true;
+            document.getElementById('tableInfo').style.display = 'none';
+
+            document.getElementById('selectedDateTime').textContent =
+                new Date(dateInput.value + 'T' + timeInput.value).toLocaleString('uk-UA', {day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'});
+
+            renderFloorPlan();
+            goStep(2);
+        } catch(e) {
+            showAlert(e.message || 'Помилка', 'error');
+        }
+        btnShow.disabled = false;
+        btnShow.textContent = 'Показати схему залу';
+    });
+
+    btnBack1.addEventListener('click', () => goStep(1));
+    btnBack2.addEventListener('click', () => goStep(2));
+
+    // STEP 2 -> 3
+    btnNext3.addEventListener('click', () => {
+        if (!selectedTable) return;
+        document.getElementById('confirmTable').textContent =
+            `Столик ${selectedTable.label} — ${selectedTable.capacity} місць` + (selectedTable.hasSofa ? ' (з диванчиком)' : '');
+        const dt = new Date(dateInput.value + 'T' + timeInput.value);
+        const dtEnd = new Date(dt.getTime() + DURATION * 3600000);
+        document.getElementById('confirmTime').textContent =
+            dt.toLocaleString('uk-UA', {day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'}) +
+            ' — ' + dtEnd.toLocaleString('uk-UA', {hour:'2-digit',minute:'2-digit'});
+        document.getElementById('confirmDuration').textContent = `Тривалість: ${DURATION} годин`;
+        goStep(3);
+    });
+
+    // STEP 3 -> Confirm
+    btnConfirm.addEventListener('click', async () => {
+        const name = document.getElementById('guestName').value.trim();
+        const phone = document.getElementById('guestPhone').value.trim();
+        if (!name || !phone) { showAlert('Заповніть ім\'я та телефон', 'error'); return; }
+
+        btnConfirm.disabled = true;
+        btnConfirm.textContent = 'Бронювання...';
+        try {
+            const r = await fetch('/api/reservations', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token,
+                    'X-CSRF-Token': csrf,
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    tableId: selectedTableId,
+                    timeStart: dateInput.value + 'T' + timeInput.value,
+                    guestName: name,
+                    guestPhone: phone,
+                }),
+            });
+            const data = await r.json();
+            if (!r.ok) throw new Error(data.description || data.error || 'Помилка');
+
+            document.getElementById('doneDetails').textContent =
+                `Столик ${data.tableLabel} (${data.tableCapacity} місць) — ` +
+                new Date(data.timeStart).toLocaleString('uk-UA', {day:'numeric',month:'long',hour:'2-digit',minute:'2-digit'}) +
+                ' — ' + new Date(data.timeEnd).toLocaleString('uk-UA', {hour:'2-digit',minute:'2-digit'});
+            goStep(4);
+        } catch(e) {
+            showAlert(e.message, 'error');
+            btnConfirm.disabled = false;
+            btnConfirm.innerHTML = '<i class="fa-solid fa-check"></i> Забронювати';
+        }
+    });
+
+    // ══════ FLOOR PLAN RENDERER ══════
+    const VB_W = 1200, VB_H = 900;
+    const tooltip = document.getElementById('floorTooltip');
+    const ttLabel = document.getElementById('ttLabel');
+    const ttInfo  = document.getElementById('ttInfo');
+    const wrap    = document.getElementById('floorPlanWrap');
+
+    function renderFloorPlan() {
+        const container = document.getElementById('floorPlan');
+
+        let svg = `<svg viewBox="0 0 ${VB_W} ${VB_H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;">`;
+
+        // ── Defs: shadows, glows, gradients ──
+        svg += `<defs>`;
+        svg += `<filter id="shd" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#000" flood-opacity="0.5"/></filter>`;
+        svg += `<filter id="glowG" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+        svg += `<filter id="glowGold" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+        svg += `<linearGradient id="floorGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#111118"/><stop offset="50%" stop-color="#16161F"/><stop offset="100%" stop-color="#111118"/></linearGradient>`;
+        svg += `<linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1E1E2A"/><stop offset="100%" stop-color="#16161F"/></linearGradient>`;
+        svg += `<linearGradient id="tblFree" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1F4A2E"/><stop offset="100%" stop-color="#163822"/></linearGradient>`;
+        svg += `<linearGradient id="tblBook" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#5A1A28"/><stop offset="100%" stop-color="#3D1018"/></linearGradient>`;
+        svg += `<linearGradient id="tblSel" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#D4BA7A"/><stop offset="100%" stop-color="#B89B55"/></linearGradient>`;
+        svg += `<pattern id="floorPat" width="40" height="40" patternUnits="userSpaceOnUse"><rect width="40" height="40" fill="none"/><line x1="0" y1="40" x2="40" y2="0" stroke="rgba(198,167,94,0.018)" stroke-width="0.5"/></pattern>`;
+        svg += `</defs>`;
+
+        // ── Background ──
+        svg += `<rect width="${VB_W}" height="${VB_H}" fill="url(#floorGrad)"/>`;
+        svg += `<rect width="${VB_W}" height="${VB_H}" fill="url(#floorPat)"/>`;
+
+        // Outer walls
+        svg += `<rect x="4" y="4" width="${VB_W-8}" height="${VB_H-8}" rx="14" fill="none" stroke="rgba(198,167,94,0.1)" stroke-width="2"/>`;
+
+        // ── BAR ZONE (top) ──
+        svg += `<rect x="180" y="0" width="780" height="95" fill="url(#barGrad)" stroke="rgba(198,167,94,0.12)" stroke-width="1"/>`;
+        // Bar counter
+        svg += `<rect x="210" y="14" width="720" height="36" rx="8" fill="#1A1A26" stroke="rgba(198,167,94,0.25)" stroke-width="2"/>`;
+        svg += `<rect x="214" y="18" width="712" height="28" rx="6" fill="#15151F"/>`;
+        svg += `<text x="570" y="37" text-anchor="middle" fill="#C6A75E" font-size="14" font-weight="700" letter-spacing="4" opacity="0.7">БАРНА СТІЙКА</text>`;
+
+        // ── KITCHEN (bottom) ──
+        svg += `<rect x="330" y="830" width="540" height="70" rx="10" fill="rgba(139,30,45,0.06)" stroke="rgba(139,30,45,0.18)" stroke-width="1.5" stroke-dasharray="8,4"/>`;
+        svg += `<text x="600" y="872" text-anchor="middle" fill="#8B1E2D" font-size="16" font-weight="700" opacity="0.6" letter-spacing="3">КУХНЯ</text>`;
+
+        // ── WC (top-left) ──
+        svg += `<rect x="0" y="0" width="140" height="95" fill="rgba(90,138,181,0.04)" stroke="rgba(90,138,181,0.12)" stroke-width="1"/>`;
+        svg += `<text x="70" y="50" text-anchor="middle" fill="#5A8AB5" font-size="14" font-weight="600" opacity="0.6">WC</text>`;
+        svg += `<text x="70" y="72" text-anchor="middle" fill="#5A8AB5" font-size="20" opacity="0.4">🚻</text>`;
+
+        // ── ENTRANCE (right) ──
+        svg += `<rect x="1130" y="340" width="70" height="160" rx="4" fill="rgba(90,158,111,0.05)" stroke="rgba(90,158,111,0.18)" stroke-width="1.5"/>`;
+        svg += `<text x="1165" y="410" text-anchor="middle" fill="#5A9E6F" font-size="12" font-weight="700" opacity="0.7" letter-spacing="1">ВХІД</text>`;
+        svg += `<text x="1165" y="440" text-anchor="middle" fill="#5A9E6F" font-size="24" opacity="0.5">🚪</text>`;
+        // Door lines
+        svg += `<line x1="1130" y1="340" x2="1130" y2="500" stroke="rgba(90,158,111,0.3)" stroke-width="2"/>`;
+
+        // ── VIP ZONE outline ──
+        svg += `<rect x="180" y="240" width="680" height="290" rx="16" fill="rgba(198,167,94,0.015)" stroke="rgba(198,167,94,0.08)" stroke-width="1.5" stroke-dasharray="10,5"/>`;
+        svg += `<text x="520" y="262" text-anchor="middle" fill="rgba(198,167,94,0.2)" font-size="13" font-weight="700" letter-spacing="5">VIP ЗОНА</text>`;
+
+        // ── TABLES ──
+        allTables.forEach(t => {
+            const cx = t.x * VB_W / 100;
+            const cy = t.y * VB_H / 100;
+
+            const isBooked = bookedIds.has(t.id);
+            const isBar = !t.bookable;
+            const isSelected = t.id === selectedTableId;
+
+            // Table dimensions (much bigger now)
+            let tw, th;
+            if (isBar)            { tw = 26; th = 26; }
+            else if (t.capacity >= 6) { tw = 100; th = 60; }
+            else if (t.capacity >= 5) { tw = 90;  th = 54; }
+            else if (t.capacity >= 4) { tw = 76;  th = 48; }
+            else if (t.capacity >= 3) { tw = 64;  th = 42; }
+            else                      { tw = 52;  th = 36; }
+
+            const rx = isBar ? 13 : 10;
+
+            // Colors
+            let fill, stroke, shadowFilter;
+            if (isBar) {
+                fill = '#252530'; stroke = '#3A3A48'; shadowFilter = '';
+            } else if (isSelected) {
+                fill = 'url(#tblSel)'; stroke = '#E8D48A'; shadowFilter = 'filter="url(#glowGold)"';
+            } else if (isBooked) {
+                fill = 'url(#tblBook)'; stroke = '#6B2030'; shadowFilter = 'filter="url(#shd)"';
+            } else {
+                fill = 'url(#tblFree)'; stroke = '#2E7D46'; shadowFilter = 'filter="url(#shd)"';
+            }
+
+            const cursor = isBar ? 'default' : isBooked ? 'not-allowed' : 'pointer';
+
+            // ── Sofa (curved shape behind table) ──
+            if (t.hasSofa && !isBar) {
+                const sw = tw + 16, sh = th + 16;
+                const sofaColor = isSelected ? 'rgba(212,186,122,0.2)' : isBooked ? 'rgba(107,32,48,0.15)' : 'rgba(46,125,70,0.12)';
+                const sofaStroke = isSelected ? '#D4BA7A' : isBooked ? '#5A1A28' : 'rgba(46,125,70,0.3)';
+                // Curved sofa on top side
+                svg += `<path d="M${cx - sw/2 + 8},${cy - sh/2} Q${cx},${cy - sh/2 - 12} ${cx + sw/2 - 8},${cy - sh/2} L${cx + sw/2},${cy - sh/2 + 6} Q${cx},${cy - sh/2 - 4} ${cx - sw/2},${cy - sh/2 + 6} Z" fill="${sofaColor}" stroke="${sofaStroke}" stroke-width="1.5" rx="6"/>`;
+                // Curved sofa on bottom side
+                svg += `<path d="M${cx - sw/2 + 8},${cy + sh/2} Q${cx},${cy + sh/2 + 12} ${cx + sw/2 - 8},${cy + sh/2} L${cx + sw/2},${cy + sh/2 - 6} Q${cx},${cy + sh/2 + 4} ${cx - sw/2},${cy + sh/2 - 6} Z" fill="${sofaColor}" stroke="${sofaStroke}" stroke-width="1.5" rx="6"/>`;
+            }
+
+            // ── Table group ──
+            svg += `<g class="floor-table" data-id="${t.id}" style="cursor:${cursor};" ${shadowFilter}>`;
+
+            // Table surface
+            svg += `<rect x="${cx - tw/2}" y="${cy - th/2}" width="${tw}" height="${th}" rx="${rx}" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
+
+            // Inner highlight line on table
+            if (!isBar) {
+                svg += `<rect x="${cx - tw/2 + 3}" y="${cy - th/2 + 3}" width="${tw - 6}" height="${th - 6}" rx="${rx - 2}" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>`;
+            }
+
+            svg += `</g>`;
+
+            // ── Chairs ──
+            if (!isBar) {
+                const chairR = t.capacity >= 5 ? 8 : t.capacity >= 3 ? 7 : 6;
+                const gap = chairR + 6;
+                const positions = getChairPositions(cx, cy, tw, th, t.capacity, gap);
+                positions.forEach(p => {
+                    let cFill, cStroke;
+                    if (isSelected)    { cFill = '#A08840'; cStroke = '#C6A75E'; }
+                    else if (isBooked) { cFill = '#3D1018'; cStroke = '#5A1A28'; }
+                    else               { cFill = '#0F2A18'; cStroke = '#1F4A2E'; }
+                    svg += `<circle cx="${p.x}" cy="${p.y}" r="${chairR}" fill="${cFill}" stroke="${cStroke}" stroke-width="1.5" style="pointer-events:none;"/>`;
+                    // Chair inner dot
+                    svg += `<circle cx="${p.x}" cy="${p.y}" r="${chairR - 3}" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="0.5" style="pointer-events:none;"/>`;
+                });
+            }
+
+            // ── Label ──
+            if (isBar) {
+                const barColor = '#555';
+                svg += `<text x="${cx}" y="${cy + 1}" text-anchor="middle" dominant-baseline="middle" fill="${barColor}" font-size="10" font-weight="600" style="pointer-events:none;">${t.label}</text>`;
+            } else {
+                const labelColor = isSelected ? '#1A1508' : isBooked ? '#9B3040' : '#5FBF78';
+                svg += `<text x="${cx}" y="${cy - 3}" text-anchor="middle" dominant-baseline="middle" fill="${labelColor}" font-size="${t.capacity >= 5 ? 16 : 14}" font-weight="700" style="pointer-events:none;">${t.label}</text>`;
+                // Capacity as person icons
+                const capColor = isSelected ? 'rgba(26,21,8,0.6)' : isBooked ? 'rgba(155,48,64,0.5)' : 'rgba(95,191,120,0.4)';
+                const pIcons = '👤'.repeat(Math.min(t.capacity, 6));
+                svg += `<text x="${cx}" y="${cy + 14}" text-anchor="middle" dominant-baseline="middle" fill="${capColor}" font-size="9" style="pointer-events:none;">${pIcons}</text>`;
+            }
+        });
+
+        svg += `</svg>`;
+        container.innerHTML = svg;
+
+        // ── Event handlers ──
+        container.querySelectorAll('.floor-table').forEach(el => {
+            const id = parseInt(el.dataset.id);
+            const t = allTables.find(x => x.id === id);
+            if (!t) return;
+
+            // Click
+            el.addEventListener('click', () => {
+                if (!t.bookable || bookedIds.has(t.id)) return;
+                selectedTableId = id;
+                selectedTable = t;
+                btnNext3.disabled = false;
+                const info = document.getElementById('tableInfo');
+                info.style.display = '';
+                document.getElementById('infoLabel').textContent = t.label;
+                document.getElementById('infoCapacity').textContent = t.capacity;
+                document.getElementById('infoSofa').textContent = t.hasSofa ? '· з диванчиком' : '';
+                renderFloorPlan();
+            });
+
+            // Hover tooltip
+            el.addEventListener('mouseenter', (e) => {
+                if (t.zone === 'bar') {
+                    ttLabel.textContent = t.label;
+                    ttInfo.textContent = 'Барне місце (без бронювання)';
+                } else {
+                    ttLabel.textContent = `Столик ${t.label}`;
+                    let info = `${t.capacity} місць`;
+                    if (t.hasSofa) info += ' · диванчик';
+                    if (bookedIds.has(t.id)) info += ' · ЗАЙНЯТО';
+                    else info += ' · вільний';
+                    ttInfo.textContent = info;
+                }
+                tooltip.style.display = 'block';
+            });
+            el.addEventListener('mousemove', (e) => {
+                const rect = wrap.getBoundingClientRect();
+                let tx = e.clientX - rect.left + 16;
+                let ty = e.clientY - rect.top - 10;
+                if (tx + 160 > rect.width) tx = e.clientX - rect.left - 160;
+                tooltip.style.left = tx + 'px';
+                tooltip.style.top = ty + 'px';
+            });
+            el.addEventListener('mouseleave', () => {
+                tooltip.style.display = 'none';
+            });
+        });
+    }
+
+    function getChairPositions(cx, cy, w, h, count, gap) {
+        const positions = [];
+        const hw = w / 2 + gap;
+        const hh = h / 2 + gap;
+
+        if (count <= 2) {
+            positions.push({x: cx - hw, y: cy}, {x: cx + hw, y: cy});
+        } else if (count === 3) {
+            positions.push({x: cx - hw, y: cy}, {x: cx + hw, y: cy}, {x: cx, y: cy - hh});
+        } else if (count === 4) {
+            positions.push({x: cx - hw, y: cy}, {x: cx + hw, y: cy}, {x: cx, y: cy - hh}, {x: cx, y: cy + hh});
+        } else if (count === 5) {
+            positions.push(
+                {x: cx - hw, y: cy - 10}, {x: cx - hw, y: cy + 10},
+                {x: cx + hw, y: cy},
+                {x: cx - 14, y: cy - hh}, {x: cx + 14, y: cy - hh}
+            );
+        } else {
+            positions.push(
+                {x: cx - hw, y: cy - 12}, {x: cx - hw, y: cy + 12},
+                {x: cx + hw, y: cy - 12}, {x: cx + hw, y: cy + 12},
+                {x: cx - 16, y: cy - hh}, {x: cx + 16, y: cy - hh}
+            );
+        }
+        return positions.slice(0, count);
+    }
+})();
+</script>
+{% endblock %}

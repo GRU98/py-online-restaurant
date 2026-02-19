@@ -2,25 +2,62 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <title>{{ title if title else "Шепіт Мандрагори" }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title if title else "смакок" }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css">
-    <link rel="icon" href="/static/favicon.svg?v=2" type="image/svg+xml">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="icon" href="/static/favicon.svg?v=6" type="image/svg+xml">
 </head>
 <body>
+<!-- Side panels — premium ambient visuals for wide screens -->
+<div class="side-panel side-panel--left" aria-hidden="true">
+    <img class="side-panel__img" src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=60" alt="" loading="lazy">
+    <img class="side-panel__img" src="https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=600&q=60" alt="" loading="lazy">
+    <div class="side-panel__glow"></div>
+    <div class="side-panel__glow"></div>
+</div>
+<div class="side-panel side-panel--right" aria-hidden="true">
+    <img class="side-panel__img" src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=60" alt="" loading="lazy">
+    <img class="side-panel__img" src="https://images.unsplash.com/photo-1551218808-94e220e084d2?w=600&q=60" alt="" loading="lazy">
+    <div class="side-panel__glow"></div>
+    <div class="side-panel__glow"></div>
+</div>
+<script>
+(function(){
+    if (window.innerWidth < 1400) return;
+    var panels = document.querySelectorAll('.side-panel');
+    panels.forEach(function(panel){
+        for (var i = 0; i < 8; i++) {
+            var b = document.createElement('div');
+            b.className = 'side-panel__bokeh';
+            var size = 4 + Math.random() * 10;
+            b.style.width = size + 'px';
+            b.style.height = size + 'px';
+            b.style.left = Math.random() * 100 + '%';
+            b.style.animationDuration = (12 + Math.random() * 18) + 's';
+            b.style.animationDelay = (Math.random() * 15) + 's';
+            b.style.opacity = (0.15 + Math.random() * 0.25).toFixed(2);
+            if (Math.random() > 0.6) b.style.background = 'rgba(139,30,45,0.1)';
+            panel.appendChild(b);
+        }
+    });
+})();
+</script>
 <div class="page-wrap">
     <header class="site-header">
-        <div class="header-inner">
-            <div class="header-copy">
-                <h1 class="brand-title">Шепіт Мандрагори</h1>
-                <p class="brand-subtitle">Тематичне зимове кафе у Харкові на Французькому бульварі. Вишуканий сервіс, авторські меню та вечірня атмосфера з елементами магії.</p>
+        <a href="/" class="brand-logo">
+            <img src="/static/favicon.svg?v=6" alt="смакок" width="40" height="40" class="brand-icon">
+            <div>
+                <h1 class="brand-title"><span class="brand-accent">с</span>макок</h1>
+                <p class="brand-subtitle">Преміальний ресторанний досвід</p>
             </div>
-        </div>
-
-        {% include '_navigation.html' %}
+        </a>
     </header>
+
+    {% include '_navigation.html' %}
 
     <main class="content">
         <div class="content-inner">
@@ -33,22 +70,233 @@
         <div class="footer-columns">
             <div>
                 <h3>Контакти</h3>
-                <p>Email: concierge@mandrakewhisper.kh.ua</p>
-                <p>Лінія для гостей: +38 (000) 000-00-00</p>
+                <p>Email: info@smak.kh.ua</p>
+                <p>Телефон: +38 (000) 000-00-00</p>
             </div>
             <div>
-                <h3>Графік</h3>
-                <p>Будні: 16:00 — 23:00</p>
-                <p>Вихідні: 14:00 — 00:00</p>
+                <h3>Графік роботи</h3>
+                <p>Будні: 16:00 - 23:00</p>
+                <p>Вихідні: 14:00 - 00:00</p>
             </div>
             <div>
-                <h3>Розташування</h3>
+                <h3>Адреса</h3>
                 <p>Французький бульвар, 29</p>
                 <p>Харків, Україна</p>
             </div>
         </div>
-        <p class="footer-note">© {{ current_year if current_year else 2025 }} Шепіт Мандрагори. Вибрані зимові події та гастрономічні вечері.</p>
+        <div class="footer-legal-links">
+            <a href="/privacy-policy"><i class="fa-solid fa-shield-halved"></i> Політика конфіденційності</a>
+            <a href="/terms-of-use"><i class="fa-solid fa-scale-balanced"></i> Умови використання</a>
+        </div>
+        <p class="footer-note">&copy; {{ current_year if current_year else 2025 }} <span class="footer-brand"><span class="brand-accent">с</span>макок</span>. Всі права захищені.</p>
     </footer>
 </div>
+<a id="back-to-top" href="#" aria-label="Нагору"><i class="fa-solid fa-arrow-up"></i></a>
+
+{% if logged_user %}
+<div id="chatWidget" class="chat-widget">
+    <button id="chatToggle" class="chat-toggle" type="button" aria-label="Відкрити чат">
+        <i class="fa-solid fa-comments"></i>
+        <span id="chatBadge" class="chat-badge" style="display:none;">0</span>
+    </button>
+    <div id="chatPanel" class="chat-panel">
+        <div class="chat-header">
+            <span id="chatTitle"><i class="fa-solid fa-headset"></i> {% if is_admin %}Чати підтримки{% else %}Підтримка{% endif %}</span>
+            <div>
+                {% if is_admin %}<button id="chatBack" type="button" style="display:none;" title="Назад"><i class="fa-solid fa-arrow-left"></i></button>{% endif %}
+                {% if is_admin %}<button id="chatCloseChat" type="button" style="display:none;" title="Закрити чат"><i class="fa-solid fa-ban"></i></button>{% endif %}
+                <button id="chatClose" type="button" title="Згорнути"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+        <div id="chatUserList" class="chat-user-list" {% if not is_admin %}style="display:none;"{% endif %}></div>
+        <div id="chatMessages" class="chat-messages" {% if is_admin %}style="display:none;"{% endif %}></div>
+        <div id="chatInputRow" class="chat-input-row" {% if is_admin %}style="display:none;"{% endif %}>
+            <input id="chatInput" type="text" placeholder="Напишіть повідомлення..." maxlength="1000" autocomplete="off">
+            <button id="chatSend" type="button" aria-label="Надіслати"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+</div>
+<script>
+    window.__JWT_TOKEN__ = "{{ jwt_token_value }}";
+    window.__IS_ADMIN__ = {{ 'true' if is_admin else 'false' }};
+    window.__USER_ID__ = {{ logged_user.id }};
+</script>
+{% endif %}
+
+<!-- Fullscreen Cookie Consent Modal -->
+<div id="cookieConsent" style="display:none;position:fixed;inset:0;z-index:10000;
+    background:rgba(0,0,0,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+    overflow-y:auto;animation:fadeIn 0.4s var(--ease);">
+    <div style="max-width:900px;margin:3rem auto;padding:0 2rem;">
+        <div style="background:var(--bg-card);border-radius:var(--radius-lg);padding:3rem;
+            border:1px solid rgba(198,167,94,0.15);box-shadow:0 20px 60px rgba(0,0,0,0.8);">
+            
+            <div style="text-align:center;margin-bottom:2.5rem;">
+                <div style="font-size:3.5rem;margin-bottom:1rem;">🍪</div>
+                <h2 style="font-family:'Space Grotesk',sans-serif;font-size:2rem;font-weight:700;
+                    color:var(--gold);margin:0 0 0.8rem;">Політика використання файлів Cookie</h2>
+                <p style="color:var(--text-secondary);font-size:0.95rem;line-height:1.6;margin:0;">
+                    Будь ласка, ознайомтеся з нашою політикою конфіденційності та підтвердьте згоду
+                </p>
+            </div>
+
+            <div style="background:rgba(198,167,94,0.05);border-radius:var(--radius);padding:2rem;
+                border:1px solid rgba(198,167,94,0.1);margin-bottom:2rem;max-height:400px;overflow-y:auto;">
+                
+                <h3 style="color:var(--gold);font-size:1.2rem;margin:0 0 1rem;font-weight:600;">📋 Що таке файли Cookie?</h3>
+                <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.7;margin:0 0 1.5rem;">
+                    Файли cookie — це невеликі текстові файли, які зберігаються на вашому пристрої під час відвідування веб-сайтів. 
+                    Вони допомагають нам забезпечити коректну роботу сайту, покращити ваш досвід використання та надати персоналізовані послуги.
+                </p>
+
+                <h3 style="color:var(--gold);font-size:1.2rem;margin:0 0 1rem;font-weight:600;">🎯 Які типи Cookie ми використовуємо?</h3>
+                <div style="margin-bottom:1.5rem;">
+                    <h4 style="color:var(--text);font-size:1rem;margin:0 0 0.5rem;font-weight:600;">1. Обов'язкові Cookie</h4>
+                    <p style="color:var(--text-secondary);font-size:0.88rem;line-height:1.6;margin:0 0 1rem;padding-left:1.2rem;">
+                        Ці файли необхідні для базової функціональності сайту, включаючи автентифікацію користувачів, 
+                        захист від CSRF-атак, збереження кошика покупок та налаштувань сесії. Без них сайт не зможе працювати коректно.
+                    </p>
+
+                    <h4 style="color:var(--text);font-size:1rem;margin:0 0 0.5rem;font-weight:600;">2. Функціональні Cookie</h4>
+                    <p style="color:var(--text-secondary);font-size:0.88rem;line-height:1.6;margin:0 0 1rem;padding-left:1.2rem;">
+                        Зберігають ваші налаштування (мова інтерфейсу, регіон), вподобання щодо відображення контенту, 
+                        історію переглядів та інші параметри для покращення зручності використання.
+                    </p>
+
+                    <h4 style="color:var(--text);font-size:1rem;margin:0 0 0.5rem;font-weight:600;">3. Аналітичні Cookie</h4>
+                    <p style="color:var(--text-secondary);font-size:0.88rem;line-height:1.6;margin:0 0 1rem;padding-left:1.2rem;">
+                        Допомагають нам зрозуміти, як відвідувачі взаємодіють з сайтом: які сторінки найпопулярніші, 
+                        скільки часу користувачі проводять на сайті, звідки приходять. Ця інформація використовується виключно 
+                        для покращення якості наших послуг.
+                    </p>
+
+                    <h4 style="color:var(--text);font-size:1rem;margin:0 0 0.5rem;font-weight:600;">4. Маркетингові Cookie</h4>
+                    <p style="color:var(--text-secondary);font-size:0.88rem;line-height:1.6;margin:0;padding-left:1.2rem;">
+                        Використовуються для відстеження ваших переваг та показу релевантної реклами. Ми можемо надсилати 
+                        персоналізовані пропозиції, інформацію про акції та спеціальні знижки (за вашої згоди).
+                    </p>
+                </div>
+
+                <h3 style="color:var(--gold);font-size:1.2rem;margin:0 0 1rem;font-weight:600;">🔒 Захист ваших даних</h3>
+                <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.7;margin:0 0 1rem;">
+                    Ми серйозно ставимося до захисту вашої конфіденційності. Всі дані шифруються та зберігаються відповідно 
+                    до вимог GDPR та законодавства України. Ми ніколи не передаємо вашу особисту інформацію третім особам 
+                    без вашої явної згоди.
+                </p>
+
+                <h3 style="color:var(--gold);font-size:1.2rem;margin:0 0 1rem;font-weight:600;">⚙️ Управління Cookie</h3>
+                <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.7;margin:0 0 1rem;">
+                    Ви можете в будь-який момент змінити налаштування cookie у вашому браузері або видалити їх. 
+                    Зверніть увагу, що відключення деяких типів cookie може вплинути на функціональність сайту.
+                </p>
+
+                <h3 style="color:var(--gold);font-size:1.2rem;margin:0 0 1rem;font-weight:600;">📧 Контактна інформація</h3>
+                <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.7;margin:0;">
+                    Якщо у вас виникли питання щодо нашої політики конфіденційності або використання cookie, 
+                    будь ласка, зв'яжіться з нами: <strong style="color:var(--gold);">info@smak.kh.ua</strong>
+                </p>
+            </div>
+
+            <div style="background:rgba(192,57,43,0.1);border:2px solid rgba(192,57,43,0.3);
+                border-radius:var(--radius);padding:1.5rem;margin-bottom:2rem;">
+                <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;">
+                    <div style="font-size:2rem;">🔞</div>
+                    <div>
+                        <h3 style="color:var(--crimson-light);font-size:1.1rem;margin:0 0 0.3rem;font-weight:700;">Підтвердження віку</h3>
+                        <p style="color:var(--text-secondary);font-size:0.88rem;margin:0;line-height:1.5;">
+                            Наше меню містить алкогольні напої. Відповідно до законодавства України, 
+                            доступ до цієї категорії товарів дозволений лише особам, які досягли 18 років.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-bottom:2rem;">
+                <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;
+                    padding:1rem;border-radius:var(--radius);background:rgba(198,167,94,0.05);
+                    border:2px solid rgba(198,167,94,0.15);transition:all 0.25s var(--ease);margin-bottom:1rem;"
+                    onmouseover="this.style.borderColor='rgba(198,167,94,0.3)'"
+                    onmouseout="this.style.borderColor='rgba(198,167,94,0.15)'">
+                    <input type="checkbox" id="ageConfirm" style="width:22px;height:22px;margin-top:2px;accent-color:var(--gold);cursor:pointer;">
+                    <span style="color:var(--text);font-size:0.95rem;line-height:1.6;">
+                        <strong style="color:var(--gold);">Підтверджую, що мені виповнилося 18 років</strong><br>
+                        <span style="color:var(--text-secondary);font-size:0.85rem;">
+                            Я розумію, що надання недостовірної інформації може призвести до відповідальності згідно з чинним законодавством.
+                        </span>
+                    </span>
+                </label>
+
+                <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;
+                    padding:1rem;border-radius:var(--radius);background:rgba(198,167,94,0.03);
+                    border:1px solid rgba(198,167,94,0.1);transition:all 0.25s var(--ease);"
+                    onmouseover="this.style.borderColor='rgba(198,167,94,0.2)'"
+                    onmouseout="this.style.borderColor='rgba(198,167,94,0.1)'">
+                    <input type="checkbox" id="cookieAcceptAll" style="width:20px;height:20px;margin-top:2px;accent-color:var(--gold);cursor:pointer;">
+                    <span style="color:var(--text);font-size:0.9rem;line-height:1.6;">
+                        <strong>Приймаю всі типи cookie</strong><br>
+                        <span style="color:var(--text-secondary);font-size:0.82rem;">
+                            Включаючи обов'язкові, функціональні, аналітичні та маркетингові файли cookie
+                        </span>
+                    </span>
+                </label>
+            </div>
+
+            <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;">
+                <button id="cookieAcceptBtn" type="button" disabled
+                    style="padding:14px 40px;background:var(--gradient-btn);color:var(--bg-deep);border:none;
+                    border-radius:var(--radius-pill);font-weight:700;font-size:1rem;cursor:pointer;
+                    opacity:0.4;transition:all 0.3s var(--ease);font-family:'Space Grotesk',sans-serif;
+                    box-shadow:0 4px 20px rgba(198,167,94,0.0);letter-spacing:0.5px;"
+                    onmouseover="if(!this.disabled){this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 25px rgba(198,167,94,0.3)';}"
+                    onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 20px rgba(198,167,94,0.0)';">
+                    ✓ Прийняти всі та продовжити
+                </button>
+            </div>
+
+            <p style="text-align:center;color:var(--text-muted);font-size:0.78rem;margin:1.5rem 0 0;line-height:1.5;">
+                Продовжуючи використання сайту, ви погоджуєтесь з нашою 
+                <a href="/privacy-policy" style="color:var(--gold);text-decoration:none;">Політикою конфіденційності</a> та 
+                <a href="/terms-of-use" style="color:var(--gold);text-decoration:none;">Умовами використання</a>
+            </p>
+        </div>
+    </div>
+</div>
+<style>
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+</style>
+<script>
+(function(){
+    if (!localStorage.getItem('cookie_consent')) {
+        document.getElementById('cookieConsent').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+    var ageBox = document.getElementById('ageConfirm');
+    var cookieBox = document.getElementById('cookieAcceptAll');
+    var btn = document.getElementById('cookieAcceptBtn');
+    
+    function updateButton() {
+        var isValid = ageBox.checked && cookieBox.checked;
+        btn.disabled = !isValid;
+        btn.style.opacity = isValid ? '1' : '0.4';
+        btn.style.cursor = isValid ? 'pointer' : 'not-allowed';
+    }
+    
+    if (ageBox && cookieBox && btn) {
+        ageBox.addEventListener('change', updateButton);
+        cookieBox.addEventListener('change', updateButton);
+        
+        btn.addEventListener('click', function() {
+            if (!this.disabled) {
+                localStorage.setItem('cookie_consent', '1');
+                localStorage.setItem('age_confirmed', '1');
+                document.getElementById('cookieConsent').style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        });
+    }
+})();
+</script>
+
+<script src="/static/js/main.js"></script>
 </body>
 </html>

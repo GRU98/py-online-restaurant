@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block content %}
+<section>
+    <h2>Адміністрування меню</h2>
+    {% include '_admin_navigation.html' %}
+    {% if all_positions %}
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Назва</th>
+                <th>Категорія</th>
+                <th>Ціна</th>
+                <th>Знижка</th>
+                <th>Статус</th>
+                <th>Дії</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for pos in all_positions %}
+                <tr>
+                    <td>{{ pos.id }}</td>
+                    <td>{{ pos.name }}</td>
+                    <td><span class="pill-tag" style="font-size:0.72rem;">{{ pos.category or '—' }}</span></td>
+                    <td>
+                        {% if pos.discount_percent and pos.original_price %}
+                            <span style="text-decoration:line-through;color:var(--text-muted);font-size:0.82rem;">{{ pos.original_price|round(0)|int }}</span>
+                            <strong style="color:var(--gold);">{{ pos.price|round(0)|int }} грн</strong>
+                        {% else %}
+                            {{ pos.price|round(0)|int }} грн
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:4px;" id="discountRow{{ pos.id }}">
+                            <input type="number" min="0" max="99" value="{{ pos.discount_percent or 0 }}"
+                                   id="discountInput{{ pos.id }}" style="width:60px;padding:4px 6px;font-size:0.82rem;">
+                            <span style="font-size:0.82rem;">%</span>
+                            <button type="button" class="btn-sm" onclick="applyDiscount({{ pos.id }})">
+                                <i class="fa-solid fa-tag"></i>
+                            </button>
+                        </div>
+                        {% if pos.discount_percent %}
+                        <span style="color:var(--crimson-light);font-size:0.78rem;font-weight:600;">-{{ pos.discount_percent }}%</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="pill-tag" style="{% if not pos.active %}background:rgba(192,57,43,0.1);color:var(--crimson-light);border-color:rgba(192,57,43,0.15);{% endif %}">
+                            {% if pos.active %}Активна{% else %}Прихована{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display:inline-flex;gap:6px;align-items:center;">
+                            <a href="/edit_position/{{ pos.id }}" class="btn-sm" style="text-decoration:none;"><i class="fa-solid fa-pen"></i> Редагувати</a>
+                            <form method="post" style="display: inline-flex; gap: 6px;margin:0;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                <input type="hidden" name="pos_id" value="{{ pos.id }}">
+                                <button type="submit" name="action" value="toggle" class="btn-sm">Змінити</button>
+                                <button type="submit" name="action" value="delete" class="btn-sm btn-danger">Видалити</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Позицій у меню ще не додано.</p>
+    {% endif %}
+</section>
+
+<script>
+function applyDiscount(itemId) {
+    var input = document.getElementById('discountInput' + itemId);
+    var percent = parseInt(input.value) || 0;
+    var csrf = "{{ csrf_token }}";
+    fetch('/api/admin/menu/' + itemId + '/discount', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','X-CSRF-Token':csrf},
+        credentials: 'same-origin',
+        body: JSON.stringify({percent: percent})
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+        if (d.id) window.location.reload();
+        else alert(d.description || 'Помилка');
+    })
+    .catch(function() { alert('Помилка мережі'); });
+}
+</script>
+{% endblock %}

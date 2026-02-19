@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 40" fill="none">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="190" y2="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#E2CFA0"/>
+      <stop offset="40%" stop-color="#D4BA7A"/>
+      <stop offset="100%" stop-color="#A08840"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0" y1="4" x2="32" y2="36" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F0E0B8"/>
+      <stop offset="100%" stop-color="#C6A75E"/>
+    </linearGradient>
+  </defs>
+  <style>@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&amp;display=swap');</style>
+  <text x="0" y="30" font-family="'Montserrat',sans-serif" font-size="34" font-weight="700" fill="url(#g2)" letter-spacing="4">с</text>
+  <text x="27" y="30" font-family="'Montserrat',sans-serif" font-size="34" font-weight="500" fill="url(#g1)" letter-spacing="4">макок</text>
+  <line x1="1" y1="36" x2="22" y2="36" stroke="url(#g2)" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+</svg>

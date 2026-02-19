@@ -1,65 +1,131 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="hero-banner">
-    <h2>Вітаємо у {{ app_name }}!</h2>
-    <p>«Шепіт Мандрагори» — камерне зимове кафе на Французькому бульварі у Харкові. Ми пропонуємо авторські вечері, сезонні сет-меню та винну карту для приватних зустрічей і бізнес-подій.</p>
-    <a class="btn" href="/menu">Відкрити меню</a>
+<section class="hero-banner hero-bg">
+    <img class="hero-bg-img" src="https://images.unsplash.com/photo-1550547660-d9450f859349?w=1920&q=85" alt="" loading="eager">
+    <h2 class="shimmer-text" style="font-size:2.8rem;">Найкращі бургери в місті</h2>
+    <p>Свіжі, соковиті, зроблені з любов'ю. Преміальні інгредієнти та авторські рецепти від наших шефів.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <a class="btn" href="/menu">Переглянути меню</a>
+        {% if logged_user and not is_admin %}
+        <a class="btn btn-outline" href="/reserved">Забронювати стіл</a>
+        <a class="btn btn-outline" href="/create_order">Замовити онлайн</a>
+        {% endif %}
+    </div>
 </section>
 
 <section class="card-grid">
-    <article class="card">
-        <h3>Концепція</h3>
-        <p>Затишний простір у стилі зимового салону з панорамами Французького бульвару, живою музикою та меню, що змінюється разом із сезоном.</p>
-    <article class="card">
-        <h3>Меню</h3>
-        <p>Колекція вишуканих страв, натхнених гастрономічними традиціями магічного світу: витримані бульйони, авторські соуси та десерти зі шляхетними прянощами.</p>
+    <article class="card animate-in" style="animation-delay:0.1s;">
+        <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&q=80" alt=""
+             style="width:100px;height:100px;border-radius:50%;object-fit:cover;margin:0 auto 1rem;display:block;border:2px solid rgba(198,167,94,0.2);box-shadow:0 4px 20px rgba(0,0,0,0.4);">
+        <h3><i class="fa-solid fa-fire-flame-curved"></i> Концепція</h3>
+        <p>Затишна атмосфера, жива музика та сезонне меню від найкращих шефів.</p>
     </article>
-    <article class="card">
-        <h3>Доставка</h3>
-        <p>Замовлення доставляються вчасно й делікатно: ми забезпечуємо контроль температури, презентацію та індивідуальний сервіс для кожного гостя.</p>
+    <article class="card animate-in" style="animation-delay:0.25s;">
+        <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&q=80" alt=""
+             style="width:100px;height:100px;border-radius:50%;object-fit:cover;margin:0 auto 1rem;display:block;border:2px solid rgba(198,167,94,0.2);box-shadow:0 4px 20px rgba(0,0,0,0.4);">
+        <h3><i class="fa-solid fa-utensils"></i> Меню</h3>
+        <p>Різноманітні страви з найкращих інгредієнтів: від класичних бургерів до авторських десертів.</p>
+    </article>
+    <article class="card animate-in" style="animation-delay:0.4s;">
+        <img src="https://images.unsplash.com/photo-1526367790999-0150786686a2?w=400&q=80" alt=""
+             style="width:100px;height:100px;border-radius:50%;object-fit:cover;margin:0 auto 1rem;display:block;border:2px solid rgba(198,167,94,0.2);box-shadow:0 4px 20px rgba(0,0,0,0.4);">
+        <h3><i class="fa-solid fa-truck-fast"></i> Доставка</h3>
+        <p>Швидка доставка з контролем температури та індивідуальним сервісом для кожного гостя.</p>
     </article>
 </section>
 
-<section>
-    <h3>Чому нас обирають</h3>
-    <ol>
-        <li>Сезонні продукти від локальних харківських постачальників і партнерів.</li>
-        <li>Персоналізовані дегустаційні сети для бізнес-зустрічей та приватних івентів.</li>
-        <li>Стриманий інтер’єр із теплим освітленням, винним баром та уважним сервісом.</li>
+<section class="section-bg animate-in" style="animation-delay:0.2s;">
+    <img class="section-bg-img" src="https://images.unsplash.com/photo-1559339352-11d035aa65de?w=1920&q=85" alt="" loading="lazy">
+    <h3 style="color:var(--gold);text-align:center;margin-bottom:1.2rem;">Чому нас обирають</h3>
+    <ol style="max-width:600px;margin:0 auto;">
+        <li>Сезонні продукти від локальних харківських постачальників.</li>
+        <li>Персоналізовані дегустаційні сети для бізнес-зустрічей та івентів.</li>
+        <li>Стриманий інтер'єр із теплим освітленням та уважним сервісом.</li>
     </ol>
-    <p><a href="/register">Створіть акаунт</a>, щоб відкривати нові історії разом із кожною стравою.</p>
 </section>
 
-<section>
-    <h3>Зимові рекомендації шефа</h3>
-    {% if highlights %}
-        <table class="menu-table">
-            <thead>
+<!-- Trending dishes (loaded from /api/order-trends) -->
+<section id="trendsSection" class="animate-in" style="animation-delay:0.25s;display:none;">
+    <h3 style="color:var(--gold);"><i class="fa-solid fa-fire"></i> Популярні страви</h3>
+    <p style="color:var(--text-muted);margin-bottom:1.2rem;font-size:0.9rem;">Найчастіше замовляють за останній тиждень</p>
+    <div id="trendsGrid" class="card-grid"></div>
+</section>
+<script>
+(function(){
+    function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+    fetch('/api/order-trends').then(function(r){return r.json();}).then(function(items){
+        if (!Array.isArray(items) || items.length === 0) return;
+        var section = document.getElementById('trendsSection');
+        var grid = document.getElementById('trendsGrid');
+        section.style.display = '';
+        items.forEach(function(item){
+            var card = document.createElement('article');
+            card.className = 'card';
+            var price = Math.round(item.price);
+            var count = parseInt(item.count) || 0;
+            var pct = parseInt(item.discount_percent) || 0;
+            var priceHtml;
+            if (pct > 0) {
+                var orig = Math.round(item.price / (1 - pct / 100));
+                priceHtml = '<span style="text-decoration:line-through;color:var(--text-muted);font-size:0.85rem;">' + orig + '</span> '
+                    + '<strong style="color:var(--gold);">' + price + ' грн</strong> '
+                    + '<span style="color:var(--crimson-light);font-size:0.8rem;">-' + pct + '%</span>';
+            } else {
+                priceHtml = '<strong style="color:var(--gold);">' + price + ' грн</strong>';
+            }
+            card.innerHTML = '<h4 style="margin-bottom:0.4rem;">' + esc(item.name) + '</h4>'
+                + '<span class="pill-tag" style="font-size:0.72rem;margin-bottom:0.5rem;">' + esc(item.category) + '</span>'
+                + '<p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:0.6rem;">'
+                + '<i class="fa-solid fa-chart-line" style="color:var(--gold);margin-right:4px;"></i>Замовлено ' + count + ' разів</p>'
+                + '<div>' + priceHtml + '</div>'
+                + '<a class="btn btn-sm" href="/position/' + encodeURIComponent(item.name) + '" style="margin-top:0.8rem;">Переглянути</a>';
+            grid.appendChild(card);
+        });
+    }).catch(function(){});
+})();
+</script>
+
+{% if highlights %}
+<section class="animate-in" style="animation-delay:0.3s;">
+    <h3 style="color:var(--gold);">Рекомендації від шефа</h3>
+    <table class="menu-table">
+        <thead>
+        <tr>
+            <th>Назва</th>
+            <th>Опис</th>
+            <th>Ціна</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for item in highlights %}
             <tr>
-                <th>Назва</th>
-                <th>Опис</th>
-                <th>Ціна</th>
+                <td><a href="/position/{{ item.name }}">{{ item.name }}</a></td>
+                <td>{{ item.description }}</td>
+                <td style="font-weight:700;">
+                    {% if item.discount_percent and item.original_price %}
+                        <span style="text-decoration:line-through;color:var(--text-muted);font-size:0.85rem;">{{ item.original_price|round(0)|int }}</span>
+                        <span style="color:#C6A75E;margin-left:6px;">{{ item.price|round(0)|int }} грн</span>
+                        <span style="color:var(--crimson-light);font-size:0.8rem;margin-left:4px;">-{{ item.discount_percent }}%</span>
+                    {% else %}
+                        <span style="color:#C6A75E;">{{ item.price|round(0)|int }} грн</span>
+                    {% endif %}
+                </td>
             </tr>
-            </thead>
-            <tbody>
-            {% for item in highlights %}
-                <tr>
-                    <td><a href="/position/{{ item.name }}">{{ item.name }}</a></td>
-                    <td>{{ item.description }}</td>
-                    <td>{{ item.price }} грн</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>Меню наразі оновлюється. Завітайте згодом, щоб оцінити нові сезонні позиції.</p>
-    {% endif %}
+        {% endfor %}
+        </tbody>
+    </table>
 </section>
+{% endif %}
 
-<section>
-    <h3>Долучайтеся до спільноти гостей</h3>
-    <p>
-        <a href="/login">Увійти</a> або <a href="/register">зареєструватися</a>, щоб отримувати персональні пропозиції та керувати бронюваннями.
-    </p>
+{% if not logged_user %}
+<section class="section-bg animate-in" style="text-align:center;animation-delay:0.3s;">
+    <img class="section-bg-img" src="https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=1920&q=85" alt="" loading="lazy">
+    <h3 style="color:var(--gold);">Приєднуйтесь до нас</h3>
+    <p>Створіть акаунт, щоб замовляти страви, бронювати столики та отримувати персональні пропозиції.</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:1.5rem;">
+        <a class="btn" href="/login">Увійти</a>
+        <a class="btn btn-outline" href="/register">Зареєструватися</a>
+    </div>
 </section>
+{% endif %}
 {% endblock %}

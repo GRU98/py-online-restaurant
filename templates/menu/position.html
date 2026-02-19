@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+    <div class="card-grid">
+        <div>
+            <h2>{{ position.name }}</h2>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:0.8rem;">
+                <span class="pill-tag">{{ position.weight }} г</span>
+                {% if position.category %}
+                <span class="pill-tag">{{ position.category }}</span>
+                {% endif %}
+            </div>
+            <p><strong>Ціна:</strong>
+                {% if position.discount_percent and position.original_price %}
+                    <span style="text-decoration:line-through;color:var(--text-muted);">{{ position.original_price|round(0)|int }} грн</span>
+                    <strong style="color:var(--gold);font-size:1.2rem;margin-left:8px;">{{ position.price|round(0)|int }} грн</strong>
+                    <span style="color:var(--crimson-light);font-weight:600;margin-left:6px;">-{{ position.discount_percent }}%</span>
+                {% else %}
+                    <strong style="color:var(--gold);">{{ position.price|round(0)|int }} грн</strong>
+                {% endif %}
+            </p>
+            <p><strong>Інгредієнти:</strong> {{ position.ingredients }}</p>
+            <p><strong>Опис:</strong> {{ position.description }}</p>
+        </div>
+        <div class="dish-image-wrapper">
+            {% if position.file_name %}
+                <img class="dish-image" src="/static/menu/{{ position.file_name }}" alt="{{ position.name }}">
+            {% else %}
+                <div style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                    <i class="fa-solid fa-image" style="font-size: 3rem; opacity: 0.3;"></i>
+                    <p>Зображення готується</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <form method="post" class="form-grid" style="margin-top: 1.5rem; max-width: 300px;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div>
+            <label for="num">Кількість</label>
+            <input id="num" type="number" name="num" min="1" value="1" required>
+        </div>
+        <div>
+            <button type="submit">Додати до кошика</button>
+        </div>
+    </form>
+    <p style="margin-top: 1rem;"><a href="/menu">← Повернутися до меню</a></p>
+</section>
+{% endblock %}
